@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screen Repair Form</title>
+  <style>
+    body { text-align: center; font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 2rem; }
+    .container { margin: 0 auto; max-width: 600px; text-align: left; background: #fff; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+    header { text-align: center; margin-bottom: 1.5rem; }
+    header img { max-height: 80px; display: block; margin: 0 auto 0.5rem; }
+    label { display: block; margin-top: 1rem; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid #999; border-radius: 4px; box-sizing: border-box; }
+    .screen-group { border: 1px dashed #aaa; padding: 1rem; margin-top: 1rem; position: relative; border-radius: 4px; background: #fff; }
+    .remove-btn { position: absolute; top: 8px; right: 8px; background: #dc3545; color: #fff; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer; }
+    .price-display { margin-top: 0.5rem; font-weight: bold; }
+    #add-screen { margin-top: 1rem; padding: 0.5rem 1rem; cursor: pointer; }
+    .summary { margin-top: 1.5rem; padding: 1rem; background: #fff; border: 1px solid #ccc; border-radius: 4px; }
+    .summary p { margin: 0.5rem 0; font-weight: bold; }
+    button[type="submit"] { margin: 1.5rem auto 0; display: block; padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <img src="ace-logo.png" alt="ACE Logo">
+      <h1>Screen Repair Form</h1>
+    </header>
+    <form id="repairForm">
+      <label>Date</label>
+      <input id="repair-date" type="date" name="date" required>
+      <label>Customer Full Name</label>
+      <input type="text" name="customerName" placeholder="e.g. Jane Doe" required>
+      <label>Phone Number</label>
+      <input id="phone-input" type="tel" name="phoneNumber" placeholder="e.g. (555) 123-4567" required>
+
+      <div id="screens-container">
+        <div class="screen-group" id="screen-template">
+          <button type="button" class="remove-btn">×</button>
+          <label>Screen Width (inches)</label>
+          <input type="number" name="screenWidth" min="0" step="0.1" placeholder="e.g. 24" required>
+          <label>Screen Height (inches)</label>
+          <input type="number" name="screenHeight" min="0" step="0.1" placeholder="e.g. 30" required>
+          <label>Quantity</label>
+          <input type="number" name="quantity" min="1" step="1" placeholder="1" required>
+          <label>Material</label>
+          <select name="material" required>
+            <option>Silver Fiber</option>
+            <option>Black Fiber</option>
+            <option>Silver Aluminum</option>
+            <option>Black Aluminum</option>
+            <option>Pet Screen</option>
+            <option>SS Glass</option>
+            <option>DS Glass</option>
+            <option>Plexiglass</option>
+          </select>
+          <label><input type="checkbox" name="addCorners"> Add Corners ($7 each)</label>
+          <input type="number" name="cornerQty" min="0" step="1" placeholder="0" disabled>
+          <div class="price-display unit-price">Unit: $0.00</div>
+          <div class="price-display corner-price">Corners: $0.00</div>
+          <div class="price-display total-price">Total: $0.00</div>
+        </div>
+      </div>
+
+      <button type="button" id="add-screen">Add Another Screen</button>
+      <label>Notes</label>
+      <textarea name="notes" placeholder="Any special instructions or comments"></textarea>
+
+      <div class="summary">
+        <p id="summary-quantity">Total Screens: 0</p>
+        <p id="summary-screen-total">Screen Total: $0.00</p>
+        <p id="summary-labor">Labor Charge: $0.00</p>
+        <p id="summary-tax">Tax: $0.00</p>
+        <p id="summary-grand">Grand Total: $0.00</p>
+      </div>
+
+      <button type="submit">Generate Form</button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Auto-populate today's date
+      // Auto-populate today's date using local timezone
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      document.getElementById('repair-date').value = `${yyyy}-${mm}-${dd}`;
+
+      // Phone formatting
+      const phoneInput = document.getElementById('phone-input');
+      function formatPhone(e) {
+        let digits = e.target.value.replace(/\D/g, '').substring(0,10);
+        const parts = [];
+        if (digits.length > 0) parts.push('(' + digits.substring(0,3));
+        if (digits.length >= 4) parts.push(') ' + digits.substring(3,6));
+        if (digits.length >= 7) parts.push('-' + digits.substring(6,10));
+        e.target.value = parts.join('');
+      }
+      if (phoneInput) {
+        phoneInput.addEventListener('input', formatPhone);
+        phoneInput.addEventListener('blur', formatPhone);
+      }
+
+      const TAX_RATE = 0.1025;
+      // Full preset sizes with labor and material prices
+      const SET_SIZES = [
+        { w: 24, h: 30, labor: 20, prices: { 'Silver Fiber': 10, 'Black Fiber': 10, 'Silver Aluminum': 13, 'Black Aluminum': 13, 'Pet Screen': 18, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 24, h: 36, labor: 20, prices: { 'Silver Fiber': 12, 'Black Fiber': 12, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 20, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 30, h: 30, labor: 20, prices: { 'Silver Fiber': 13, 'Black Fiber': 13, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 23, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 30, h: 36, labor: 20, prices: { 'Silver Fiber': 13, 'Black Fiber': 10, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 21, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 30, h: 42, labor: 20, prices: { 'Silver Fiber': 14, 'Black Fiber': 14, 'Silver Aluminum': 20, 'Black Aluminum': 20, 'Pet Screen': 26, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 36, h: 48, labor: 20, prices: { 'Silver Fiber': 17, 'Black Fiber': 17, 'Silver Aluminum': 24, 'Black Aluminum': 24, 'Pet Screen': 27, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 48, h: 48, labor: 30, prices: { 'Silver Fiber': 17, 'Black Fiber': 17, 'Silver Aluminum': 24, 'Black Aluminum': 24, 'Pet Screen': 32, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 36, h: 78, labor: 30, prices: { 'Silver Fiber': 21, 'Black Fiber': 21, 'Silver Aluminum': 31, 'Black Aluminum': 31, 'Pet Screen': 42, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 48, h: 72, labor: 30, prices: { 'Silver Fiber': 10, 'Black Fiber': 10, 'Silver Aluminum': 13, 'Black Aluminum': 13, 'Pet Screen': 18, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } }
+      ];
+
+      // Corrected function signature
+      function nearestSize(w, h) {
+        let best = SET_SIZES[0];
+        const rawSum = w + h;
+        SET_SIZES.forEach(s => {
+          const currDiff = Math.abs((s.w + s.h) - rawSum);
+          const bestDiff = Math.abs((best.w + best.h) - rawSum);
+          if (currDiff < bestDiff) best = s;
+        });
+        return best;
+      }
+
+      function calculateGlassCost(w, h, rate) { return (w + h) * rate; }
+
+      const screensContainer = document.getElementById('screens-container');
+      const template = document.getElementById('screen-template');
+      const sumQty = document.getElementById('summary-quantity');
+      const sumScr = document.getElementById('summary-screen-total');
+      const sumLab = document.getElementById('summary-labor');
+      const sumTax = document.getElementById('summary-tax');
+      const sumGrand = document.getElementById('summary-grand');
+
+      function updateSummary() {
+        let qtySum = 0, screenTotal = 0, laborTotal = 0;
+        screensContainer.querySelectorAll('.screen-group').forEach(g => {
+          const t = parseFloat(g.querySelector('.total-price').textContent.split('$')[1]) || 0;
+          const q = parseInt(g.querySelector('[name="quantity"]').value) || 0;
+          const l = parseFloat(g.dataset.labor) || 0;
+          qtySum += q;
+          screenTotal += t;
+          laborTotal += l * q;
+        });
+        const tax = screenTotal * TAX_RATE;
+        sumQty.textContent = `Total Screens: ${qtySum}`;
+        sumScr.textContent = `Screen Total: $${screenTotal.toFixed(2)}`;
+        sumLab.textContent = `Labor Charge: $${laborTotal.toFixed(2)}`;
+        sumTax.textContent = `Tax: $${tax.toFixed(2)}`;
+        sumGrand.textContent = `Grand Total: $${(screenTotal + laborTotal + tax).toFixed(2)}`;
+      }
+
+      function updatePrices(g) {
+        const w = parseFloat(g.querySelector('[name="screenWidth"]').value) || 0;
+        const h = parseFloat(g.querySelector('[name="screenHeight"]').value) || 0;
+        const match = nearestSize(w, h);
+        g.dataset.labor = match.labor;
+        const qty = parseInt(g.querySelector('[name="quantity"]').value) || 0;
+        const mat = g.querySelector('[name="material"]').value;
+        let unit = ['SS Glass', 'DS Glass', 'Plexiglass'].includes(mat)
+          ? calculateGlassCost(w, h, match.prices[mat] || 0)
+          : (match.prices[mat] || 0);
+        const addC = g.querySelector('[name="addCorners"]').checked;
+        const cq = parseInt(g.querySelector('[name="cornerQty"]').value) || 0;
+        const cCost = addC ? cq * 7 : 0;
+        g.querySelector('[name="cornerQty"]').disabled = !addC;
+        g.querySelector('.unit-price').textContent = `Unit: $${unit.toFixed(2)}`;
+        g.querySelector('.corner-price').textContent = `Corners: $${cCost.toFixed(2)}`;
+        const total = unit * qty + cCost;
+        g.querySelector('.total-price').textContent = `Total: $${total.toFixed(2)}`;
+        updateSummary();
+      }
+
+      function attachEvents(g) {
+        if (!g) return;
+        ['screenWidth', 'screenHeight', 'quantity', 'cornerQty'].forEach(n => {
+          const el = g.querySelector(`[name="${n}"]`);
+          if (el) el.addEventListener('input', () => updatePrices(g));
+        });
+        g.querySelector('[name="material"]').addEventListener('change', () => updatePrices(g));
+        g.querySelector('[name="addCorners"]').addEventListener('change', () => updatePrices(g));
+        g.querySelector('.remove-btn').addEventListener('click', () => {
+          if (screensContainer.children.length > 1) { g.remove(); updateSummary(); }
+        });
+        updatePrices(g);
+      }
+
+      attachEvents(template);
+      document.getElementById('add-screen').addEventListener('click', () => {
+        const clone = template.cloneNode(true);
+        clone.removeAttribute('id'); screensContainer.appendChild(clone); attachEvents(clone);
+      });
+      document.getElementById('add-screen').addEventListener('click', () => {
+        const clone = template.cloneNode(true);
+        clone.removeAttribute('id'); screensContainer.appendChild(clone); attachEvents(clone);
+      });
+
+      document.getElementById('repairForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const form = new FormData(e.target);
+        const notes = form.get('notes');
+        const newWin = window.open('', '_blank');
+        let rows = '';
+        screensContainer.querySelectorAll('.screen-group').forEach((g, i) => {
+          const w = g.querySelector('[name="screenWidth"]').value;
+          const h = g.querySelector('[name="screenHeight"]').value;
+          const qty = parseInt(g.querySelector('[name="quantity"]').value) || 0;
+          const mat = g.querySelector('[name="material"]').value;
+          const unit = g.querySelector('.unit-price').textContent;
+          const total = g.querySelector('.total-price').textContent;
+          const cPrice = g.querySelector('.corner-price').textContent;
+          rows += `<tr><th>Screen ${i+1}</th><td>Size: ${w}\" × ${h}\"<br>Quantity: ${qty}<br>Material: ${mat}<br>${unit}<br>${cPrice}<br>${total}</td></tr>`;
+        });
+        const qtyTotal = sumQty.textContent.split(': ')[1];
+        const labTotal = sumLab.textContent.split('$')[1];
+        const subText = sumScr.textContent.split('$')[1];
+        const taxText = sumTax.textContent.split('$')[1];
+        const grandText = sumGrand.textContent.split('$')[1];
+        newWin.document.write(`
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Repair Details</title><style>
+body{font-family:Arial,sans-serif;text-align:center;background:#f9f9f9;margin:0;padding:2rem}
+.output-container{margin:0 auto;max-width:600px;text-align:left;background:#fff;padding:1rem;border:2px solid#333;border-radius:6px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:.75rem;border-bottom:1px solid#ccc}
+th{background:#f2f2f2;width:35%}
+tr:last-child td{border-bottom:none}
+p.thanks{text-align:center;margin-top:1rem;font-style:italic}
+</style></head><body><div class="output-container"><header style="text-align:center;"><img src="ace-logo.png" alt="ACE Logo" style="display:block; margin:0 auto;"><h2 style="text-align:center">Screen Repair Details</h2>
+            <p style="text-align:center;font-style:italic;">5423 W. Devon Ave		|		(773) 775-7205</p>
+          </header><table>
+<tr><th>Date</th><td>${form.get('date')}</td></tr>
+<tr><th>Customer</th><td>${form.get('customerName')}</td></tr>
+<tr><th>Phone</th><td>${form.get('phoneNumber')}</td></tr>
+<tr><th>Notes</th><td>${notes}</td></tr>
+${rows}
+<tr><th>Total Screens</th><td>${qtyTotal}</td></tr>
+<tr><th>Screen Total</th><td>$${subText}</td></tr>
+<tr><th>Labor Charge</th><td>$${labTotal}</td></tr>
+<tr><th>Tax</th><td>$${taxText}</td></tr>
+<tr><th>Grand Total</th><td>$${grandText}</td></tr>
+</table>
+            <p class="disclaimer" style="text-align:center;font-style:italic;">We are not responsible for screens or windows 30 days after repair</p>
+            <hr>
+            <p class="thanks">Thank you for your business!</p>
+          </div></body></html>
+        `);
+        newWin.document.close();
+      });
+    });
+  </script>
+</body>
+</html>
