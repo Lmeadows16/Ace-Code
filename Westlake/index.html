@@ -18,6 +18,8 @@
     .summary { margin-top: 1.5rem; padding: 1rem; background: #fff; border: 1px solid #ccc; border-radius: 4px; }
     .summary p { margin: 0.5rem 0; font-weight: bold; }
     button[type="submit"] { margin: 1.5rem auto 0; display: block; padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .disclaimer { margin: 1rem 0; font-style: italic; text-align: center; }
+    hr { margin: 1rem 0; }
   </style>
 </head>
 <body>
@@ -38,9 +40,9 @@
         <div class="screen-group" id="screen-template">
           <button type="button" class="remove-btn">×</button>
           <label>Screen Width (inches)</label>
-          <input type="number" name="screenWidth" min="0" step="0.1" placeholder="e.g. 24" required>
+          <input type="number" name="screenWidth" min="0" step="0.1" placeholder="24" required>
           <label>Screen Height (inches)</label>
-          <input type="number" name="screenHeight" min="0" step="0.1" placeholder="e.g. 30" required>
+          <input type="number" name="screenHeight" min="0" step="0.1" placeholder="30" required>
           <label>Quantity</label>
           <input type="number" name="quantity" min="1" step="1" placeholder="1" required>
           <label>Material</label>
@@ -80,56 +82,50 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Auto-populate today's date
-      // Auto-populate today's date using local timezone
+      // Auto-populate date
       const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      document.getElementById('repair-date').value = `${yyyy}-${mm}-${dd}`;
+      document.getElementById('repair-date').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
       // Phone formatting
       const phoneInput = document.getElementById('phone-input');
       function formatPhone(e) {
         let digits = e.target.value.replace(/\D/g, '').substring(0,10);
-        const parts = [];
-        if (digits.length > 0) parts.push('(' + digits.substring(0,3));
-        if (digits.length >= 4) parts.push(') ' + digits.substring(3,6));
-        if (digits.length >= 7) parts.push('-' + digits.substring(6,10));
-        e.target.value = parts.join('');
+        let formatted = '';
+        if (digits.length > 0) formatted += '(' + digits.substring(0,3);
+        if (digits.length >= 4) formatted += ') ' + digits.substring(3,6);
+        if (digits.length >= 7) formatted += '-' + digits.substring(6,10);
+        e.target.value = formatted;
       }
-      if (phoneInput) {
-        phoneInput.addEventListener('input', formatPhone);
-        phoneInput.addEventListener('blur', formatPhone);
-      }
+      phoneInput.addEventListener('input', formatPhone);
+      phoneInput.addEventListener('blur', formatPhone);
 
       const TAX_RATE = 0.1025;
-      // Full preset sizes with labor and material prices
       const SET_SIZES = [
-        { w: 24, h: 30, labor: 20, prices: { 'Silver Fiber': 10, 'Black Fiber': 10, 'Silver Aluminum': 13, 'Black Aluminum': 13, 'Pet Screen': 18, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 24, h: 36, labor: 20, prices: { 'Silver Fiber': 12, 'Black Fiber': 12, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 20, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 30, h: 30, labor: 20, prices: { 'Silver Fiber': 13, 'Black Fiber': 13, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 23, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 30, h: 36, labor: 20, prices: { 'Silver Fiber': 13, 'Black Fiber': 10, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 21, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 30, h: 42, labor: 20, prices: { 'Silver Fiber': 14, 'Black Fiber': 14, 'Silver Aluminum': 20, 'Black Aluminum': 20, 'Pet Screen': 26, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 36, h: 48, labor: 20, prices: { 'Silver Fiber': 17, 'Black Fiber': 17, 'Silver Aluminum': 24, 'Black Aluminum': 24, 'Pet Screen': 27, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 48, h: 48, labor: 30, prices: { 'Silver Fiber': 17, 'Black Fiber': 17, 'Silver Aluminum': 24, 'Black Aluminum': 24, 'Pet Screen': 32, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 36, h: 78, labor: 30, prices: { 'Silver Fiber': 21, 'Black Fiber': 21, 'Silver Aluminum': 31, 'Black Aluminum': 31, 'Pet Screen': 42, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 48, h: 72, labor: 30, prices: { 'Silver Fiber': 10, 'Black Fiber': 10, 'Silver Aluminum': 13, 'Black Aluminum': 13, 'Pet Screen': 18, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } }
+        {w:24,h:30,labor:20,prices:{'Silver Fiber':10,'Black Fiber':10,'Silver Aluminum':13,'Black Aluminum':13,'Pet Screen':18,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
+        {w:24,h:36,labor:20,prices:{'Silver Fiber':12,'Black Fiber':12,'Silver Aluminum':18,'Black Aluminum':18,'Pet Screen':20,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
+        {w:30,h:30,labor:20,prices:{'Silver Fiber':13,'Black Fiber':13,'Silver Aluminum':18,'Black Aluminum':18,'Pet Screen':23,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
+        {w:30,h:36,labor:20,prices:{'Silver Fiber':13,'Black Fiber':10,'Silver Aluminum':18,'Black Aluminum':18,'Pet Screen':21,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
+        {w:30,h:42,labor:20,prices:{'Silver Fiber':14,'Black Fiber':14,'Silver Aluminum':20,'Black Aluminum':20,'Pet Screen':26,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
+        {w:36,h:48,labor:20,prices:{'Silver Fiber':17,'Black Fiber':17,'Silver Aluminum':24,'Black Aluminum':24,'Pet Screen':27,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
+        {w:48,h:48,labor:30,prices:{'Silver Fiber':17,'Black Fiber':17,'Silver Aluminum':24,'Black Aluminum':24,'Pet Screen':32,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
+        {w:36,h:78,labor:30,prices:{'Silver Fiber':21,'Black Fiber':21,'Silver Aluminum':31,'Black Aluminum':31,'Pet Screen':42,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
+        {w:48,h:72,labor:30,prices:{'Silver Fiber':10,'Black Fiber':10,'Silver Aluminum':13,'Black Aluminum':13,'Pet Screen':18,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}}
       ];
 
-      // Corrected function signature
-      function nearestSize(w, h) {
+      function nearestSize(w,h) {
         let best = SET_SIZES[0];
-        const rawSum = w + h;
+        const sum = w + h;
         SET_SIZES.forEach(s => {
-          const currDiff = Math.abs((s.w + s.h) - rawSum);
-          const bestDiff = Math.abs((best.w + best.h) - rawSum);
-          if (currDiff < bestDiff) best = s;
+          const diff = Math.abs((s.w + s.h) - sum);
+          const bestDiff = Math.abs((best.w + best.h) - sum);
+          if (diff < bestDiff) best = s;
         });
         return best;
       }
 
-      function calculateGlassCost(w, h, rate) { return (w + h) * rate; }
+      function calculateGlassCost(w,h,rate) {
+        return (w + h) * rate;
+      }
 
       const screensContainer = document.getElementById('screens-container');
       const template = document.getElementById('screen-template');
@@ -140,54 +136,57 @@
       const sumGrand = document.getElementById('summary-grand');
 
       function updateSummary() {
-        let qtySum = 0, screenTotal = 0, laborTotal = 0;
+        let totalQty = 0, screenSum = 0, laborSum = 0;
         screensContainer.querySelectorAll('.screen-group').forEach(g => {
           const t = parseFloat(g.querySelector('.total-price').textContent.split('$')[1]) || 0;
           const q = parseInt(g.querySelector('[name="quantity"]').value) || 0;
           const l = parseFloat(g.dataset.labor) || 0;
-          qtySum += q;
-          screenTotal += t;
-          laborTotal += l * q;
+          totalQty += q;
+          screenSum += t;
+          laborSum += l * q;
         });
-        const tax = screenTotal * TAX_RATE;
-        sumQty.textContent = `Total Screens: ${qtySum}`;
-        sumScr.textContent = `Screen Total: $${screenTotal.toFixed(2)}`;
-        sumLab.textContent = `Labor Charge: $${laborTotal.toFixed(2)}`;
+        const tax = screenSum * TAX_RATE;
+        sumQty.textContent = `Total Screens: ${totalQty}`;
+        sumScr.textContent = `Screen Total: $${screenSum.toFixed(2)}`;
+        sumLab.textContent = `Labor Charge: $${laborSum.toFixed(2)}`;
         sumTax.textContent = `Tax: $${tax.toFixed(2)}`;
-        sumGrand.textContent = `Grand Total: $${(screenTotal + laborTotal + tax).toFixed(2)}`;
+        sumGrand.textContent = `Grand Total: $${(screenSum + laborSum + tax).toFixed(2)}`;
       }
 
       function updatePrices(g) {
         const w = parseFloat(g.querySelector('[name="screenWidth"]').value) || 0;
         const h = parseFloat(g.querySelector('[name="screenHeight"]').value) || 0;
-        const match = nearestSize(w, h);
-        g.dataset.labor = match.labor;
+        const preset = nearestSize(w, h);
+        g.dataset.labor = preset.labor;
         const qty = parseInt(g.querySelector('[name="quantity"]').value) || 0;
         const mat = g.querySelector('[name="material"]').value;
-        let unit = ['SS Glass', 'DS Glass', 'Plexiglass'].includes(mat)
-          ? calculateGlassCost(w, h, match.prices[mat] || 0)
-          : (match.prices[mat] || 0);
+        let unitCost = ['SS Glass','DS Glass','Plexiglass'].includes(mat)
+          ? calculateGlassCost(w, h, preset.prices[mat] || 0)
+          : (preset.prices[mat] || 0);
         const addC = g.querySelector('[name="addCorners"]').checked;
         const cq = parseInt(g.querySelector('[name="cornerQty"]').value) || 0;
-        const cCost = addC ? cq * 7 : 0;
+        const cornerCost = addC ? cq * 7 : 0;
         g.querySelector('[name="cornerQty"]').disabled = !addC;
-        g.querySelector('.unit-price').textContent = `Unit: $${unit.toFixed(2)}`;
-        g.querySelector('.corner-price').textContent = `Corners: $${cCost.toFixed(2)}`;
-        const total = unit * qty + cCost;
+        g.querySelector('.unit-price').textContent = `Unit: $${unitCost.toFixed(2)}`;
+        g.querySelector('.corner-price').textContent = `Corners: $${cornerCost.toFixed(2)}`;
+        const total = unitCost * qty + cornerCost;
         g.querySelector('.total-price').textContent = `Total: $${total.toFixed(2)}`;
         updateSummary();
       }
 
       function attachEvents(g) {
         if (!g) return;
-        ['screenWidth', 'screenHeight', 'quantity', 'cornerQty'].forEach(n => {
-          const el = g.querySelector(`[name="${n}"]`);
+        ['screenWidth','screenHeight','quantity','cornerQty'].forEach(name => {
+          const el = g.querySelector(`[name="${name}"]`);
           if (el) el.addEventListener('input', () => updatePrices(g));
         });
         g.querySelector('[name="material"]').addEventListener('change', () => updatePrices(g));
         g.querySelector('[name="addCorners"]').addEventListener('change', () => updatePrices(g));
         g.querySelector('.remove-btn').addEventListener('click', () => {
-          if (screensContainer.children.length > 1) { g.remove(); updateSummary(); }
+          if (screensContainer.children.length > 1) {
+            g.remove();
+            updateSummary();
+          }
         });
         updatePrices(g);
       }
@@ -195,11 +194,9 @@
       attachEvents(template);
       document.getElementById('add-screen').addEventListener('click', () => {
         const clone = template.cloneNode(true);
-        clone.removeAttribute('id'); screensContainer.appendChild(clone); attachEvents(clone);
-      });
-      document.getElementById('add-screen').addEventListener('click', () => {
-        const clone = template.cloneNode(true);
-        clone.removeAttribute('id'); screensContainer.appendChild(clone); attachEvents(clone);
+        clone.removeAttribute('id');
+        screensContainer.appendChild(clone);
+        attachEvents(clone);
       });
 
       document.getElementById('repairForm').addEventListener('submit', e => {
@@ -211,45 +208,64 @@
         screensContainer.querySelectorAll('.screen-group').forEach((g, i) => {
           const w = g.querySelector('[name="screenWidth"]').value;
           const h = g.querySelector('[name="screenHeight"]').value;
-          const qty = parseInt(g.querySelector('[name="quantity"]').value) || 0;
+          const q = parseInt(g.querySelector('[name="quantity"]').value) || 0;
           const mat = g.querySelector('[name="material"]').value;
-          const unit = g.querySelector('.unit-price').textContent;
-          const total = g.querySelector('.total-price').textContent;
-          const cPrice = g.querySelector('.corner-price').textContent;
-          rows += `<tr><th>Screen ${i+1}</th><td>Size: ${w}\" × ${h}\"<br>Quantity: ${qty}<br>Material: ${mat}<br>${unit}<br>${cPrice}<br>${total}</td></tr>`;
+          const unitText = g.querySelector('.unit-price').textContent;
+          const cornerQty = parseInt(g.querySelector('[name="cornerQty"]').value) || 0;
+          const cornerCost = parseFloat(g.querySelector('.corner-price').textContent.split('$')[1]) || 0;
+          const totalText = g.querySelector('.total-price').textContent;
+          rows += `<tr><th>Screen ${i+1}</th><td>
+            Size: ${w}\" × ${h}\"<br>
+            Quantity: ${q}<br>
+            Material: ${mat}<br>
+            ${unitText}<br>
+            Corners Quantity: ${cornerQty}<br>
+            Corners Cost: $${cornerCost.toFixed(2)}<br>
+            ${totalText}
+          </td></tr>`;
         });
-        const qtyTotal = sumQty.textContent.split(': ')[1];
-        const labTotal = sumLab.textContent.split('$')[1];
-        const subText = sumScr.textContent.split('$')[1];
-        const taxText = sumTax.textContent.split('$')[1];
-        const grandText = sumGrand.textContent.split('$')[1];
+        const totalQty = sumQty.textContent.split(': ')[1];
+        const laborTotal = sumLab.textContent.split('$')[1];
+        const screenTotal = sumScr.textContent.split('$')[1];
+        const taxTotal = sumTax.textContent.split('$')[1];
+        const grandTotal = sumGrand.textContent.split('$')[1];
         newWin.document.write(`
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Repair Details</title><style>
-body{font-family:Arial,sans-serif;text-align:center;background:#f9f9f9;margin:0;padding:2rem}
-.output-container{margin:0 auto;max-width:600px;text-align:left;background:#fff;padding:1rem;border:2px solid#333;border-radius:6px}
-table{width:100%;border-collapse:collapse}
-th,td{text-align:left;padding:.75rem;border-bottom:1px solid#ccc}
-th{background:#f2f2f2;width:35%}
-tr:last-child td{border-bottom:none}
-p.thanks{text-align:center;margin-top:1rem;font-style:italic}
-</style></head><body><div class="output-container"><header style="text-align:center;"><img src="ace-logo.png" alt="ACE Logo" style="display:block; margin:0 auto;"><h2 style="text-align:center">Screen Repair Details</h2>
+          body{font-family:Arial,sans-serif;text-align:center;background:#f9f9f9;margin:0;padding:2rem}
+          .output-container{margin:0 auto;max-width:600px;text-align:left;background:#fff;padding:1rem;border:2px solid#333;border-radius:6px}
+          header{text-align:center}
+          header img{max-height:80px;margin:0 auto .5rem;display:block}
+          h2{text-align:center}
+          table{width:100%;border-collapse:collapse}
+          th,td{text-align:left;padding:.75rem;border-bottom:1px solid#ccc}
+          th{background:#f2f2f2;width:35%}
+          .disclaimer{margin:1rem 0;font-style:italic;text-align:center}
+          hr{margin:1rem 0}
+          .thanks{text-align:center;margin-top:1rem;font-style:italic}
+        </style></head><body><div class="output-container">
+          <header>
+            <img src="ace-logo.png" alt="ACE Logo">
+            <h2>Screen Repair Details</h2>
             <p style="text-align:center;font-style:italic;">5423 W. Devon Ave		|		(773) 775-7205</p>
-          </header><table>
-<tr><th>Date</th><td>${form.get('date')}</td></tr>
-<tr><th>Customer</th><td>${form.get('customerName')}</td></tr>
-<tr><th>Phone</th><td>${form.get('phoneNumber')}</td></tr>
-<tr><th>Notes</th><td>${notes}</td></tr>
-${rows}
-<tr><th>Total Screens</th><td>${qtyTotal}</td></tr>
-<tr><th>Screen Total</th><td>$${subText}</td></tr>
-<tr><th>Labor Charge</th><td>$${labTotal}</td></tr>
-<tr><th>Tax</th><td>$${taxText}</td></tr>
-<tr><th>Grand Total</th><td>$${grandText}</td></tr>
-</table>
-            <p class="disclaimer" style="text-align:center;font-style:italic;">We are not responsible for screens or windows 30 days after repair</p>
-            <hr>
-            <p class="thanks">Thank you for your business!</p>
-          </div></body></html>
+          </header>
+          <table>
+            <tr><th>Date</th><td>${form.get('date')}</td></tr>
+            <tr><th>Customer</th><td>${form.get('customerName')}</td></tr>
+            <tr><th>Phone</th><td>${form.get('phoneNumber')}</td></tr>
+            <tr><th>Notes</th><td>${notes}</td></tr>
+            ${rows}
+            <tr><th>Total Screens</th><td>${totalQty}</td></tr>
+            <tr><th>Screen Total</th><td>$${screenTotal}</td></tr>
+            <tr><th>Labor Charge</th><td>$${laborTotal}</td></tr>
+            <tr><th>Tax</th><td>$${taxTotal}</td></tr>
+            <tr><th>Grand Total</th><td>$${grandTotal}</td></tr>
+          </table>
+          <p class="disclaimer">We are not responsible for screens or windows 30 days after repair</p>
+          <hr>
+          <p class="thanks">Thank you for your business!</p>
+        </div>
+        </body>
+        </html>
         `);
         newWin.document.close();
       });
