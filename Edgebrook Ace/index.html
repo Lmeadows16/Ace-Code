@@ -143,12 +143,12 @@
           const l = parseFloat(g.dataset.labor) || 0;
           totalQty += q;
           screenSum += t;
-          laborSum += l * q;
+          laborSum += (l * q) * .5;
         });
         const tax = screenSum * TAX_RATE;
         sumQty.textContent = `Total Screens: ${totalQty}`;
         sumScr.textContent = `Screen Total: $${screenSum.toFixed(2)}`;
-        sumLab.textContent = `Labor Charge: $${(laborSum * 0.5).toFixed(2)}`;
+        sumLab.textContent = `Labor Charge: $${(laborSum).toFixed(2)}`;
         sumTax.textContent = `Tax: $${tax.toFixed(2)}`;
         sumGrand.textContent = `Grand Total: $${(screenSum + laborSum + tax).toFixed(2)}`;
       }
