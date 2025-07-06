@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Delivery Entry App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background: #f2f2f2; }
+    .hidden { display: none; }
+    nav { background: #e60000; padding: 0.5rem; display: flex; justify-content: center; }
+    nav button { background: none; border: none; color: white; font-size: 1rem; margin: 0 1rem; cursor: pointer; }
+    nav button.active { font-weight: bold; text-decoration: underline; }
+    .container { padding: 1rem; }
+    #login-section { background: #fff; width: 340px; margin: 4rem auto; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border-radius: 8px; }
+    #login-section img { max-height: 60px; margin-bottom: 1rem; }
+    #login-section h1 { margin-bottom: 1rem; color: #e60000; }
+    #login-section form { display: flex; flex-direction: column; }
+    #login-section label { text-align: left; margin-top: 1rem; font-weight: bold; }
+    #login-section input { width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+    #login-section button { width: 100%; margin-top: 1.5rem; padding: 0.75rem; background: #e60000; color: white; border: none; border-radius: 4px; font-size: 1rem; }
+    #login-error { margin-top: 1rem; color: red; }
+    .entry-group { border: 1px dashed #ccc; background: #fff; padding: 1rem; margin: 1rem auto; position: relative; width: 80%; border-radius: 4px; }
+    .remove-btn { position: absolute; top: 8px; right: 8px; background: #e60000; border: none; color: #fff; padding: 0.25rem 0.5rem; cursor: pointer; border-radius: 4px; }
+    label { display: block; margin-top: 0.5rem; font-weight: bold; text-align: left; width: 80%; margin: auto; }
+    input, textarea { width: 80%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; background: #e60000; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    table { width: 90%; border-collapse: collapse; margin: 1rem auto; background: #fff; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: center; }
+    th { background: #f8f8f8; }
+  </style>
+</head>
+<body>
+  <!-- Login Section -->
+  <div id="login-section">
+    <img src="ace-logo.png" alt="ACE Logo">
+    <h1>Please Log In</h1>
+    <form id="loginForm">
+      <label>Username</label><input type="text" name="username" required>
+      <label>Password</label><input type="password" name="password" required>
+      <button type="submit">Log In</button>
+    </form>
+    <p id="login-error"></p>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" class="hidden">
+    <nav>
+      <button id="menu-input" class="active">Input Delivery</button>
+      <button id="menu-history">Past 20 Days</button>
+    </nav>
+    <div class="container">
+      <div id="input-section">
+        <img src="ace-logo.png" alt="ACE Logo" style="max-height:60px; margin-bottom:1rem;">
+        <h1 style="color:#e60000;">Delivery Entry Form</h1>
+        <form id="deliveryForm">
+          <label>Item Number</label><input type="text" name="itemNumber" required>
+          <label>Description</label><input type="text" name="description" required>
+          <label>Date Promised</label><input type="date" name="datePromised" required>
+          <div id="customers-container">
+            <div class="entry-group" id="customer-template">
+              <button type="button" class="remove-btn">×</button>
+              <label>Full Name</label><input type="text" name="fullName" required>
+              <label>Phone</label><input type="text" name="phone" required>
+              <label>Address</label><input type="text" name="address" required>
+              <label>Notes</label><textarea name="notes"></textarea>
+            </div>
+          </div>
+          <button type="button" id="add-customer">Add Another Customer</button>
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+      <div id="history-section" class="hidden">
+        <img src="ace-logo.png" alt="ACE Logo" style="max-height:60px; margin-bottom:1rem;">
+        <h2 style="color:#e60000;">Past 20 Days Deliveries</h2>
+        <table id="history-table">
+          <thead>
+            <tr><th>Date</th><th>Item</th><th>Description</th><th>Customer</th><th>Phone</th><th>Address</th><th>Notes</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const deliveries = [];
+    let loggedUser = null;
+    const credentials = { '33': '3333', 'alice': 'alicePass', 'bob': 'bobPass' };
+
+    document.getElementById('loginForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const { username, password } = Object.fromEntries(new FormData(e.target));
+      if (credentials[username] === password) {
+        loggedUser = username;
+        document.getElementById('login-error').textContent = '';
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+      } else {
+        document.getElementById('login-error').textContent = 'Invalid credentials';
+      }
+    });
+
+    function showSection(name) {
+      document.getElementById('input-section').style.display = name==='input'? 'block':'none';
+      document.getElementById('history-section').style.display = name==='history'? 'block':'none';
+      document.getElementById('menu-input').classList.toggle('active', name==='input');
+      document.getElementById('menu-history').classList.toggle('active', name==='history');
+    }
+    document.getElementById('menu-input').onclick = () => showSection('input');
+    document.getElementById('menu-history').onclick = () => { showSection('history'); loadHistory(); };
+
+    document.getElementById('add-customer').onclick = () => {
+      const clone = document.getElementById('customer-template').cloneNode(true);
+      clone.removeAttribute('id');
+      document.getElementById('customers-container').appendChild(clone);
+      attachCustomerEvents(clone);
+    };
+    function attachCustomerEvents(g) {
+      g.querySelector('.remove-btn').onclick = () => {
+        if (document.querySelectorAll('.entry-group').length > 1) g.remove();
+      };
+    }
+    attachCustomerEvents(document.getElementById('customer-template'));
+
+    document.getElementById('deliveryForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const data = new FormData(e.target);
+      const record = { date: new Date(), user: loggedUser, item: data.get('itemNumber'), desc: data.get('description'), promised: data.get('datePromised'), customers: [] };
+      document.querySelectorAll('.entry-group').forEach(g => record.customers.push(
+        { fullName: g.querySelector('[name="fullName"]').value, phone: g.querySelector('[name="phone"]').value, address: g.querySelector('[name="address"]').value, notes: g.querySelector('[name="notes"]').value }
+      ));
+      deliveries.push(record);
+      const win = window.open();
+      let html = `<div style="text-align:center;"><img src='ace-logo.png' style='max-height:60px;'>`;
+      html += `<h1 style='color:#e60000;'>Delivery Saved by ${record.user}</h1>`;
+      html += `<p>Item: ${record.item} - ${record.desc}</p><table border='1' style='margin:auto;'><tr><th>Date</th><th>Customer</th><th>Phone</th><th>Address</th><th>Notes</th></tr>`;
+      record.customers.forEach(c=>{html+=`<tr><td>${record.date.toLocaleDateString()}</td><td>${c.fullName}</td><td>${c.phone}</td><td>${c.address}</td><td>${c.notes}</td></tr>`;});
+      html += `</table><p style='margin-top:1rem;'>Thank you!</p></div>`;
+      win.document.write(html); win.document.close();
+      e.target.reset();
+      const container = document.getElementById('customers-container'); container.innerHTML=''; const tpl = document.getElementById('customer-template'); container.appendChild(tpl); attachCustomerEvents(tpl);
+    });
+
+    function loadHistory() {
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-20);
+      const tbody = document.querySelector('#history-table tbody'); tbody.innerHTML='';
+      deliveries.filter(r=>r.date>=cutoff).forEach(r=>r.customers.forEach(c=>{
+        const tr=document.createElement('tr');[r.date.toLocaleDateString(),r.item,r.desc,c.fullName,c.phone,c.address,c.notes].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td);});tbody.appendChild(tr);
+      }));
+    }
+  </script>
+</body>
+</html>

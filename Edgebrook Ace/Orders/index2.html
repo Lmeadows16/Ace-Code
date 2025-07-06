@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Delivery Entry App</title>
+  <script type="module">
+    // Firebase modular SDK imports
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: 'AIzaSyDNPziZqj3zHL_y01fXXH5uBYQB0ctS6T0',
+      authDomain: 'ace-orders-9de41.firebaseapp.com',
+      projectId: 'ace-orders-9de41',
+      storageBucket: 'ace-orders-9de41.firebasestorage.app',
+      messagingSenderId: '931385542602',
+      appId: '1:931385542602:web:9858f492ad65e36ebb7133'
+    };
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    // Credentials scoped
+    const userCredentials = { '33': '3333', 'alice': 'alicePass', 'bob': 'bobPass' };
+    var loggedUser = null;
+
+    // DOMContentLoaded ensures handlers bind after elements exist
+    document.addEventListener('DOMContentLoaded', () => {
+      // Login handling
+      const loginForm = document.getElementById('loginForm');
+      loginForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const { username, password } = Object.fromEntries(new FormData(e.target));
+        if (userCredentials[username] === password) {
+          loggedUser = username;
+          document.getElementById('login-error').textContent = '';
+          document.getElementById('login-section').classList.add('hidden');
+          document.getElementById('app').classList.remove('hidden');
+        } else {
+          document.getElementById('login-error').textContent = 'Invalid credentials';
+        }
+      });
+      // Navigation
+      function showSection(name) {
+        document.getElementById('input-section').style.display = name === 'input' ? 'block' : 'none';
+        document.getElementById('history-section').style.display = name === 'history' ? 'block' : 'none';
+        document.getElementById('menu-input').classList.toggle('active', name === 'input');
+        document.getElementById('menu-history').classList.toggle('active', name === 'history');
+      }
+      document.getElementById('menu-input').onclick = () => showSection('input');
+      document.getElementById('menu-history').onclick = () => { showSection('history'); loadHistory(); };
+      // Customer entry
+      const addBtn = document.getElementById('add-customer');
+      addBtn.addEventListener('click', () => {
+        const tpl = document.getElementById('customer-template');
+        const clone = tpl.cloneNode(true);
+        clone.removeAttribute('id');
+        document.getElementById('customers-container').appendChild(clone);
+        attachCustomerEvents(clone);
+        attachPhoneFormatter(clone);
+      });
+      function attachCustomerEvents(group) {
+        const rem = group.querySelector('.remove-btn');
+        rem.addEventListener('click', () => {
+          if (document.querySelectorAll('.entry-group').length > 1) group.remove();
+        });
+      }
+      attachCustomerEvents(document.getElementById('customer-template'));
+      // Phone formatting
+      function formatPhoneField(e) {
+        let d = e.target.value.replace(/\D/g, '').substring(0,10);
+        let r = '';
+        if (d.length>0) r+='('+d.substr(0,3);
+        if (d.length>=4) r+=') '+d.substr(3,3);
+        if (d.length>=7) r+='-'+d.substr(6,4);
+        e.target.value = r;
+      }
+      function attachPhoneFormatter(group) {
+        const phone = group.querySelector('input[name="phone"]');
+        if (phone) phone.addEventListener('input', formatPhoneField);
+      }
+      attachPhoneFormatter(document.getElementById('customer-template'));
+      // Submission
+      document.getElementById('deliveryForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const formData = Object.fromEntries(new FormData(e.target));
+        const record = {
+          date: Timestamp.fromDate(new Date()),
+          user: loggedUser,
+          item: formData.itemNumber,
+          desc: formData.description,
+          promised: Timestamp.fromDate(new Date(formData.datePromised)),
+          customers: []
+        };
+        document.querySelectorAll('.entry-group').forEach(g => {
+          record.customers.push({
+            fullName: g.querySelector('[name="fullName"]').value,
+            phone: g.querySelector('[name="phone"]').value,
+            address: g.querySelector('[name="address"]').value,
+            notes: g.querySelector('[name="notes"]').value
+          });
+        });
+        try {
+          await addDoc(collection(db, 'deliveries'), record);
+          const win = window.open();
+          win.document.write(`<!DOCTYPE html><html><body style="text-align:center;font-family:Arial;">`);
+          win.document.write(`<img src='ace-logo.png' style='max-height:60px;margin-bottom:1rem;'>`);
+          win.document.write(`<h1 style='color:#e60000;'>Delivery Saved by ${record.user}</h1>`);
+          win.document.write(`<p>Item: ${record.item} - ${record.desc}</p><p>Date Promised: ${new Date(formData.datePromised).toLocaleDateString()}</p>`);
+          win.document.write(`<table border='1' style='margin:auto;border-collapse:collapse;'><tr><th>Date</th><th>Promised</th><th>Customer</th><th>Phone</th><th>Address</th><th>Notes</th></tr>`);
+          record.customers.forEach(c => {
+            win.document.write(`<tr><td>${new Date().toLocaleDateString()}</td><td>${new Date(formData.datePromised).toLocaleDateString()}</td><td>${c.fullName}</td><td>${c.phone}</td><td>${c.address}</td><td>${c.notes}</td></tr>`);
+          });
+          win.document.write(`</table><p style='margin-top:1rem;'>Thank you!</p></body></html>`);
+          win.document.close();
+        } catch (err) {
+          console.error(err);
+          alert('Error saving delivery');
+        }
+        e.target.reset();
+      });
+      // History load
+      async function loadHistory() {
+        const cutoff = Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate()-20)));
+        const q = query(collection(db, 'deliveries'), where('date','>=',cutoff), orderBy('date','desc'));
+        const snap = await getDocs(q);
+        const tbody = document.querySelector('#history-table tbody'); tbody.innerHTML='';
+        snap.forEach(doc => {
+          const r = doc.data();
+          r.customers.forEach(c => {
+            const tr = document.createElement('tr');
+            [r.date.toDate().toLocaleDateString(), r.promised.toDate().toLocaleDateString(), c.fullName, c.phone, c.address, c.notes]
+              .forEach(v => { const td=document.createElement('td'); td.textContent=v; tr.appendChild(td); });
+            tbody.appendChild(tr);
+          });
+        });
+      }
+    });
+  </script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background: #f2f2f2; }
+    .hidden { display: none; }
+    nav { background: #e60000; padding: 0.5rem; display: flex; justify-content: center; }
+    nav button { background: none; border: none; color: #fff; font-size: 1rem; margin: 0 1rem; cursor: pointer; }
+    nav button.active { font-weight: bold; text-decoration: underline; }
+    .container { padding: 1rem; }
+    #login-section { background: #fff; width: 400px; margin: 4rem auto; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border-radius: 8px; }
+    #login-section img { max-width: 80%; height: auto; margin-bottom: 1rem; }
+    #login-section h1 { margin-bottom: 1rem; color: #e60000; }
+    #login-section form { display: flex; flex-direction: column; align-items: center; width: 100%; }
+    #login-section label { text-align: center; width: 100%; margin-top: 1rem; font-weight: bold; }
+    #login-section input { width: 80%; margin: 0.5rem auto 0; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+    #login-section button { width: 80%; margin: 1.5rem auto 0; padding: 0.75rem; background: #e60000; color: #fff; border: none; border-radius: 4px; font-size: 1rem; display: block; }
+    #login-error { margin-top: 1rem; color: red; }
+    .entry-group { border: 1px dashed #ccc; background: #fff; padding: 1rem; margin: 1rem auto; position: relative; width: 80%; border-radius: 4px; }
+    .remove-btn { position: absolute; top: 8px; right: 8px; background: #e60000; border: none; color: #fff; padding: 0.25rem 0.5rem; cursor: pointer; border-radius: 4px; }
+    label { display: block; margin-top: 0.5rem; font-weight: bold; text-align: left; width: 80%; margin: auto; }
+    input, textarea { width: 80%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; background: #e60000; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    table { width: 90%; border-collapse: collapse; margin: 1rem auto; background: #fff; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: center; }
+    th { background: #f8f8f8; }
+  </style>
+</body>
+</html>
