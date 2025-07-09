@@ -267,25 +267,52 @@
       <section id="input-section">
         <h2>New Delivery</h2>
         <form id="deliveryForm">
-          <label for="itemNumber">Item Number</label>
-          <input id="itemNumber" name="itemNumber" placeholder="e.g. 72434" required />
-          <label for="description">Description</label>
-          <textarea id="description" name="description" placeholder="e.g. Top Soil" required></textarea>
-          <label for="datePromised">Date Promised</label>
-          <input id="datePromised" type="date" name="datePromised" required />
+          <!-- === Customer Information (static) === -->
+          <fieldset id="customer-info">
+            <legend>Customer Information</legend>
+            <label>
+              Full Name
+              <input type="text" name="customerName" placeholder="Jane Doe" required>
+            </label>
+            <label>
+              Address
+              <input type="text" name="customerAddress" placeholder="123 Main St" required>
+            </label>
+            <label>
+              Phone
+              <input type="tel" name="customerPhone" placeholder="(555) 123-4567" required>
+            </label>
+          </fieldset>
 
-          <div id="customers-container">
-            <div id="customer-template" class="entry-group">
+          <!-- === Items (dynamic) === -->
+          <div id="items-container">
+            <div id="item-template" class="entry-group">
               <button type="button" class="remove-btn">×</button>
-              <label>Full Name<input name="fullName" placeholder="e.g. Jane Doe" required /></label>
-              <label>Phone<input name="phone" placeholder="e.g. (555) 123-4567" /></label>
-              <label>Address<textarea name="address"
-                  placeholder="e.g. 5423 W. Devon Ave, Chicago, IL, 60646"></textarea></label>
-              <label>Notes<textarea name="notes"></textarea></label>
+
+              <label>
+                Item Number
+                <input name="itemNumber" placeholder="e.g. 72434" required>
+              </label>
+
+              <label>
+                Description
+                <textarea name="description" placeholder="Top Soil" required></textarea>
+              </label>
+
+              <label>
+                Date Promised
+                <input type="date" name="datePromised" required>
+              </label>
             </div>
           </div>
+          <button type="button" id="add-item">Add Item</button>
 
-          <button type="button" id="add-customer">Add Customer</button>
+          <!-- === Notes === -->
+          <label for="notes">
+            Notes
+            <textarea name="notes" id="notes" placeholder="Any special instructions…"></textarea>
+          </label>
+
           <button type="submit">Save Delivery</button>
         </form>
       </section>
@@ -381,73 +408,165 @@
       document.getElementById('menu-input').onclick = () => showSection('input');
       document.getElementById('menu-history').onclick = () => { showSection('history'); loadHistory(); };
 
-      // Customer groups
-      document.getElementById('add-customer').addEventListener('click', () => {
-        const tpl = document.getElementById('customer-template');
-        const clone = tpl.cloneNode(true);
-        clone.removeAttribute('id');
-        document.getElementById('customers-container').appendChild(clone);
-        attachGroupEvents(clone);
+      const phoneInput = document.querySelector('[name="customerPhone"]');
+      phone.addEventListener('input', e => {
+        let d = e.target.value.replace(/\D/g, '').substring(0, 10);
+        let r = '';
+        if (d.length > 0) r += '(' + d.substr(0, 3);
+        if (d.length >= 4) r += ') ' + d.substr(3, 3);
+        if (d.length >= 7) r += '-' + d.substr(6, 4);
+        e.target.value = r;
       });
+
       function attachGroupEvents(group) {
         group.querySelector('.remove-btn').addEventListener('click', () => {
-          if (document.querySelectorAll('.entry-group').length > 1) group.remove();
-        });
-        group.querySelector('input[name="phone"]').addEventListener('input', e => {
-          let d = e.target.value.replace(/\D/g, '').substring(0, 10);
-          let r = '';
-          if (d.length > 0) r += '(' + d.substr(0, 3);
-          if (d.length >= 4) r += ') ' + d.substr(3, 3);
-          if (d.length >= 7) r += '-' + d.substr(6, 4);
-          e.target.value = r;
+          const groups = document.querySelectorAll('#items-container .entry-group');
+          if (groups.length > 1) group.remove();
         });
       }
-      attachGroupEvents(document.getElementById('customer-template'));
+
+      // Item groups
+      document.getElementById('add-item').addEventListener('click', () => {
+        const tpl = document.getElementById('item-template');
+        const clone = tpl.cloneNode(true);
+        clone.removeAttribute('id');
+        document.getElementById('items-container').appendChild(clone);
+        attachGroupEvents(clone);
+      });
+
+      // initialize on the template
+      attachGroupEvents(document.getElementById('item-template'));
+
+      // Build and open printable form
+      function openDeliveryForm(record) {
+        // 1) Open a new blank window
+        const formWin = window.open('', '_blank', 'width=600,height=800');
+
+        // 2) Build and write the complete HTML for the delivery form
+        formWin.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Customer Delivery Information</title>
+        <style>
+          /* Basic page styling */
+          body {
+            font-family: Arial;
+            padding: 1rem;
+          }
+          /* Center header and logo */
+          header {
+            text-align: center;
+          }
+          header img {
+            max-height: 80px;
+            margin: 0 auto;
+          }
+          /* Table styling */
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          th, td {
+            border: 1px solid #333;
+            padding: 0.5rem;
+            text-align: left;
+          }
+        </style>
+      </head>
+      <body>
+        <!-- Header with logo and title -->
+        <header>
+          <img src="ace-logo.png" alt="Company Logo">
+          <h1>Customer Delivery Information</h1>
+        </header>
+
+        <!-- Summary Info -->
+        <p><strong>Date:</strong> ${record.date.toDate().toLocaleString()}</p>
+        <p><strong>Prepared By:</strong> ${record.user}</p>
+
+        <!-- Customer Details -->
+        <p><strong>Customer:</strong> ${record.customer.name}</p>
+        <p><strong>Address:</strong> ${record.customer.address}</p>
+        <p><strong>Phone:</strong> ${record.customer.phone}</p>
+
+        <!-- Items Table -->
+        <table>
+          <thead>
+            <tr>
+              <th>Item #</th>
+              <th>Description</th>
+              <th>Promised</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${record.items.map(it => `
+              <tr>
+                <td>${it.itemNumber}</td>
+                <td>${it.description}</td>
+                <td>${it.promised.toDate().toLocaleDateString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <!-- Notes Section -->
+        <p><strong>Notes:</strong> ${record.notes || ''}</p>
+
+        <!-- Print Button -->
+        <p style="text-align:center; margin-top:2rem;">
+          <button onclick="window.print()">Print</button>
+        </p>
+      </body>
+    </html>
+  `); 
+
+        // 3) Close the document so it renders
+        formWin.document.close();
+      }
+
 
       // Submission
       document.getElementById('deliveryForm').addEventListener('submit', async e => {
         e.preventDefault();
-
-        // 1) Open the popup synchronously on click
+        // open popup early (to avoid blockers)
         const win = window.open('', '_blank');
-        if (!win) {
-          alert("Please enable pop-ups for this site to preview the delivery record.");
-          return;
-        }
+        if (!win) return alert('Enable pop-ups to preview the form.');
 
-        // 2) Gather form data
-        console.log('Save delivery checked'); // TODO: Take out
-        const data = Object.fromEntries(new FormData(e.target));
+        // 1) Customer (static)
+        const customer = {
+          name: e.target.customerName.value,
+          address: e.target.customerAddress.value,
+          phone: e.target.customerPhone.value
+        };
 
-        const [y, m, d] = data.datePromised.split('-').map(Number);
-        const promisedDate = new Date(y, m - 1, d);
+        // 2) Items (dynamic)
+        const items = Array.from(e.target.querySelectorAll('#items-container .entry-group'))
+          .map(g => {
+            const dateStr = g.querySelector('[name="datePromised"]').value;
+            return {
+              itemNumber: g.querySelector('[name="itemNumber"]').value,
+              description: g.querySelector('[name="description"]').value,
+              promised: Timestamp.fromDate(new Date(dateStr))
+            };
+          });
 
+        // 3) Notes
+        const notes = e.target.notes.value;
+
+        // 4) Build record
         const record = {
           date: Timestamp.fromDate(new Date()),
           user: userCredentials[loggedUser].name,
-          item: data.itemNumber,
-          desc: data.description,
-          promised: Timestamp.fromDate(promisedDate),
-          customers: []
+          customer, items, notes
         };
-        document.querySelectorAll('.entry-group').forEach(g => {
-          record.customers.push({
-            fullName: g.querySelector('[name="fullName"]').value,
-            phone: g.querySelector('[name="phone"]').value,
-            address: g.querySelector('[name="address"]').value,
-            notes: g.querySelector('[name="notes"]').value
-          });
-        });
-        console.log(`Order placed by ${record.user}`, record);
-        // 3) Firestore write
+
+        // 5) Save & preview
         try {
           await addDoc(collection(db, 'deliveries'), record);
-
-          // 4) Populate the open window
-          win.document.write('<pre>' + JSON.stringify(record, null, 2) + '</pre>');
-          win.document.close();
+          openDeliveryForm(record);
           e.target.reset();
-          alert('Delivery Saved!');
         } catch (err) {
           win.close();
           console.error(err);
@@ -499,4 +618,5 @@
     });
   </script>
 </body>
+
 </html>

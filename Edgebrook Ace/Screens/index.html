@@ -47,6 +47,7 @@
           <input type="number" name="quantity" min="1" step="1" placeholder="1" required>
           <label>Material</label>
           <select name="material" required>
+            <option value="" disabled selected>~~Select Material~~</option>
             <option>Silver Fiber</option>
             <option>Black Fiber</option>
             <option>Silver Aluminum</option>
@@ -200,6 +201,10 @@
       });
 
       document.getElementById('repairForm').addEventListener('submit', e => {
+        if (!e.target.checkValidity()) {
+          e.target.reportValidity();
+          return;
+        }
         e.preventDefault();
         const form = new FormData(e.target);
         const notes = form.get('notes');
