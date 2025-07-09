@@ -47,6 +47,7 @@
           <input type="number" name="quantity" min="1" step="1" placeholder="1" required>
           <label>Material</label>
           <select name="material" required>
+            <option value="" disabled selected>~~Select Material~~</option>
             <option>Silver Fiber</option>
             <option>Black Fiber</option>
             <option>Silver Aluminum</option>
@@ -109,7 +110,7 @@
         {w:36,h:48,labor:20,prices:{'Silver Fiber':17,'Black Fiber':17,'Silver Aluminum':24,'Black Aluminum':24,'Pet Screen':27,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
         {w:48,h:48,labor:30,prices:{'Silver Fiber':17,'Black Fiber':17,'Silver Aluminum':24,'Black Aluminum':24,'Pet Screen':32,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
         {w:36,h:78,labor:30,prices:{'Silver Fiber':21,'Black Fiber':21,'Silver Aluminum':31,'Black Aluminum':31,'Pet Screen':42,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
-        {w:48,h:72,labor:30,prices:{'Silver Fiber':10,'Black Fiber':10,'Silver Aluminum':13,'Black Aluminum':13,'Pet Screen':18,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}}
+        {w:48,h:72,labor:30,prices:{'Silver Fiber':22,'Black Fiber':22,'Silver Aluminum':31,'Black Aluminum':31,'Pet Screen':43,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}}
       ];
 
       function nearestSize(w,h) {
@@ -200,6 +201,11 @@
       });
 
       document.getElementById('repairForm').addEventListener('submit', e => {
+        if (!e.target.checkValidity()) {
+          e.target.reportValidity();
+          return;
+        }
+
         e.preventDefault();
         const form = new FormData(e.target);
         const notes = form.get('notes');
