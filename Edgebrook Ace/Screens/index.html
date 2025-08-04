@@ -1,33 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Screen Repair Form</title>
   <style>
-    body { text-align: center; font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 2rem; }
-    .container { margin: 0 auto; max-width: 600px; text-align: left; background: #fff; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; }
-    header { text-align: center; margin-bottom: 1.5rem; }
-    header img { max-height: 80px; display: block; margin: 0 auto 0.5rem; }
-    label { display: block; margin-top: 1rem; font-weight: bold; }
-    input, select, textarea { width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid #999; border-radius: 4px; box-sizing: border-box; }
-    .screen-group { border: 1px dashed #aaa; padding: 1rem; margin-top: 1rem; position: relative; border-radius: 4px; background: #fff; }
-    .remove-btn { position: absolute; top: 8px; right: 8px; background: #dc3545; color: #fff; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer; }
-    .price-display { margin-top: 0.5rem; font-weight: bold; }
-    #add-screen { margin-top: 1rem; padding: 0.5rem 1rem; cursor: pointer; }
-    .summary { margin-top: 1.5rem; padding: 1rem; background: #fff; border: 1px solid #ccc; border-radius: 4px; }
-    .summary p { margin: 0.5rem 0; font-weight: bold; }
-    button[type="submit"] { margin: 1.5rem auto 0; display: block; padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    .disclaimer { margin: 1rem 0; font-style: italic; text-align: center; }
-    hr { margin: 1rem 0; }
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    .container {
+      margin: 0 auto;
+      max-width: 600px;
+      text-align: left;
+      background: #fff;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    header img {
+      max-height: 80px;
+      display: block;
+      margin: 0 auto 0.5rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border: 1px solid #999;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .screen-group {
+      border: 1px dashed #aaa;
+      padding: 1rem;
+      margin-top: 1rem;
+      position: relative;
+      border-radius: 4px;
+      background: #fff;
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #dc3545;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+    }
+
+    .price-display {
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+
+    #add-screen {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+
+    .summary {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .summary p {
+      margin: 0.5rem 0;
+      font-weight: bold;
+    }
+
+    button[type="submit"] {
+      margin: 1.5rem auto 0;
+      display: block;
+      padding: 0.75rem 1.5rem;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .disclaimer {
+      margin: 1rem 0;
+      font-style: italic;
+      text-align: center;
+    }
+
+    hr {
+      margin: 1rem 0;
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <header>
       <img src="ace-logo.png" alt="ACE Logo">
       <h1>Screen Repair Form</h1>
     </header>
+    <div style="margin-bottom: 1rem; background: #ffffe0; padding: 1rem; border: 1px solid #ccc; border-radius: 6px;">
+      <strong>Instructions:</strong>
+      <ul style="margin-top: 0.5rem; padding-left: 1.2rem;">
+        <li>Double-check all measurements before submitting!</li>
+        <li>Please hand both the Customer & Store copies to the customer.</li>
+        <li>Instruct them that they will keep one, and we will keep one.</li>
+        <li>Write their first and last name, as well as how many screens they have on a piece of masking tape and stick it to the each screen in their service.</li>
+        <li>E.g. "Joe Smith 1/2" etc.</li>
+      </ul>
+    </div>
+
     <form id="repairForm">
       <label>Date</label>
       <input id="repair-date" type="date" name="date" required>
@@ -85,16 +194,16 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Auto-populate date
       const today = new Date();
-      document.getElementById('repair-date').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      document.getElementById('repair-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
       // Phone formatting
       const phoneInput = document.getElementById('phone-input');
       function formatPhone(e) {
-        let digits = e.target.value.replace(/\D/g, '').substring(0,10);
+        let digits = e.target.value.replace(/\D/g, '').substring(0, 10);
         let formatted = '';
-        if (digits.length > 0) formatted += '(' + digits.substring(0,3);
-        if (digits.length >= 4) formatted += ') ' + digits.substring(3,6);
-        if (digits.length >= 7) formatted += '-' + digits.substring(6,10);
+        if (digits.length > 0) formatted += '(' + digits.substring(0, 3);
+        if (digits.length >= 4) formatted += ') ' + digits.substring(3, 6);
+        if (digits.length >= 7) formatted += '-' + digits.substring(6, 10);
         e.target.value = formatted;
       }
       phoneInput.addEventListener('input', formatPhone);
@@ -102,18 +211,18 @@
 
       const TAX_RATE = 0.1025;
       const SET_SIZES = [
-        {w:24,h:30,labor:20,prices:{'Silver Fiber':10,'Black Fiber':10,'Silver Aluminum':13,'Black Aluminum':13,'Pet Screen':18,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
-        {w:24,h:36,labor:20,prices:{'Silver Fiber':12,'Black Fiber':12,'Silver Aluminum':18,'Black Aluminum':18,'Pet Screen':20,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
-        {w:30,h:30,labor:20,prices:{'Silver Fiber':13,'Black Fiber':13,'Silver Aluminum':18,'Black Aluminum':18,'Pet Screen':23,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
-        {w:30,h:36,labor:20,prices:{'Silver Fiber':13,'Black Fiber':10,'Silver Aluminum':18,'Black Aluminum':18,'Pet Screen':21,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
-        {w:30,h:42,labor:20,prices:{'Silver Fiber':14,'Black Fiber':14,'Silver Aluminum':20,'Black Aluminum':20,'Pet Screen':26,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
-        {w:36,h:48,labor:20,prices:{'Silver Fiber':17,'Black Fiber':17,'Silver Aluminum':24,'Black Aluminum':24,'Pet Screen':27,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
-        {w:48,h:48,labor:30,prices:{'Silver Fiber':17,'Black Fiber':17,'Silver Aluminum':24,'Black Aluminum':24,'Pet Screen':32,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
-        {w:36,h:78,labor:30,prices:{'Silver Fiber':21,'Black Fiber':21,'Silver Aluminum':31,'Black Aluminum':31,'Pet Screen':42,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}},
-        {w:48,h:72,labor:30,prices:{'Silver Fiber':22,'Black Fiber':22,'Silver Aluminum':31,'Black Aluminum':31,'Pet Screen':43,'SS Glass':0.55,'DS Glass':0.60,'Plexiglass':0.75}}
+        { w: 24, h: 30, labor: 20, prices: { 'Silver Fiber': 10, 'Black Fiber': 10, 'Silver Aluminum': 13, 'Black Aluminum': 13, 'Pet Screen': 18, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 24, h: 36, labor: 20, prices: { 'Silver Fiber': 12, 'Black Fiber': 12, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 20, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 30, h: 30, labor: 20, prices: { 'Silver Fiber': 13, 'Black Fiber': 13, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 23, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 30, h: 36, labor: 20, prices: { 'Silver Fiber': 13, 'Black Fiber': 10, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 21, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 30, h: 42, labor: 20, prices: { 'Silver Fiber': 14, 'Black Fiber': 14, 'Silver Aluminum': 20, 'Black Aluminum': 20, 'Pet Screen': 26, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 36, h: 48, labor: 20, prices: { 'Silver Fiber': 17, 'Black Fiber': 17, 'Silver Aluminum': 24, 'Black Aluminum': 24, 'Pet Screen': 27, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 48, h: 48, labor: 30, prices: { 'Silver Fiber': 17, 'Black Fiber': 17, 'Silver Aluminum': 24, 'Black Aluminum': 24, 'Pet Screen': 32, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 36, h: 78, labor: 30, prices: { 'Silver Fiber': 21, 'Black Fiber': 21, 'Silver Aluminum': 31, 'Black Aluminum': 31, 'Pet Screen': 42, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
+        { w: 48, h: 72, labor: 30, prices: { 'Silver Fiber': 22, 'Black Fiber': 22, 'Silver Aluminum': 31, 'Black Aluminum': 31, 'Pet Screen': 43, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } }
       ];
 
-      function nearestSize(w,h) {
+      function nearestSize(w, h) {
         let best = SET_SIZES[0];
         const sum = w + h;
         SET_SIZES.forEach(s => {
@@ -124,7 +233,7 @@
         return best;
       }
 
-      function calculateGlassCost(w,h,rate) {
+      function calculateGlassCost(w, h, rate) {
         return (w + h) * rate;
       }
 
@@ -161,7 +270,7 @@
         g.dataset.labor = preset.labor;
         const qty = parseInt(g.querySelector('[name="quantity"]').value) || 0;
         const mat = g.querySelector('[name="material"]').value;
-        let unitCost = ['SS Glass','DS Glass','Plexiglass'].includes(mat)
+        let unitCost = ['SS Glass', 'DS Glass', 'Plexiglass'].includes(mat)
           ? calculateGlassCost(w, h, preset.prices[mat] || 0)
           : (preset.prices[mat] || 0);
         const addC = g.querySelector('[name="addCorners"]').checked;
@@ -177,7 +286,7 @@
 
       function attachEvents(g) {
         if (!g) return;
-        ['screenWidth','screenHeight','quantity','cornerQty'].forEach(name => {
+        ['screenWidth', 'screenHeight', 'quantity', 'cornerQty'].forEach(name => {
           const el = g.querySelector(`[name="${name}"]`);
           if (el) el.addEventListener('input', () => updatePrices(g));
         });
@@ -206,6 +315,7 @@
           return;
         }
         e.preventDefault();
+        
         const form = new FormData(e.target);
         const notes = form.get('notes');
         const newWin = window.open('', '_blank');
@@ -219,7 +329,7 @@
           const cornerQty = parseInt(g.querySelector('[name="cornerQty"]').value) || 0;
           const cornerCost = parseFloat(g.querySelector('.corner-price').textContent.split('$')[1]) || 0;
           const totalText = g.querySelector('.total-price').textContent;
-          rows += `<tr><th>Screen ${i+1}</th><td>
+          rows += `<tr><th>Screen ${i + 1}</th><td>
             Size: ${w}\" × ${h}\"<br>
             Quantity: ${q}<br>
             Material: ${mat}<br>
@@ -277,4 +387,5 @@
     });
   </script>
 </body>
+
 </html>
