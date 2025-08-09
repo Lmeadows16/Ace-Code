@@ -475,6 +475,7 @@
               <th><input type="checkbox" id="select-all" /></th>
               <th>Name</th>
               <th>Username</th>
+              <th>Password</th>
               <th>Admin</th>
             </tr>
           </thead>
@@ -788,6 +789,7 @@
             <td><input type="checkbox" value="${u.username}" /></td>
             <td>${u.name}</td>
             <td>${u.username}</td>
+            <td>${u.password}</td>
             <td>${u.admin ? 'Yes' : 'No'}</td>
           `;
           tbody.appendChild(tr);
