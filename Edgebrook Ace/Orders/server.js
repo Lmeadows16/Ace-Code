@@ -100,7 +100,7 @@ app.get('/api/users', async (req, res) => {
             result.rows.map(r => ({
                 username: r.username,
                 name: r.name,
-                password: r.password,
+                // password: r.password,
                 admin: r.is_admin
             }))
         );
