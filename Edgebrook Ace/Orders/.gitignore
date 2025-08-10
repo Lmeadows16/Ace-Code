@@ -1,26 +1,23 @@
-# Firestore configurations
-# public/configure.js
-
-# Node modules
-node_modules/
-
-# Environment variables
+# env & secrets
 .env
+.env.*
+*.secret
+*.key
+*.pem
+service-account.json
 
-# Logs
+# data dumps / generated SQL
+users_dump.sql
+users_data_only.sql
+
+# node & logs
+node_modules/
 npm-debug.log*
-yarn-debug.log*
 yarn-error.log*
+pnpm-lock.yaml
 
-# Users file
-users.dat
-
-# MacOS
+# OS/editor junk
 .DS_Store
-
-# VSCode settings
+Thumbs.db
+.idea/
 .vscode/
-
-# Optional: lockfile if you prefer regenerating
-# (but typically you DO commit your lockfile)
-# package-lock.json

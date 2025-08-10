@@ -1,0 +1,8 @@
+[
+  {
+    "name": "Test Admin",
+    "username": "test",
+    "hash": "$2b$10$tn6nklX3vLVMQSBUe5za4OuoM7aRxA5LvmEcEzn/aqhG.SZc9ftaO",
+    "admin": true
+  }
+]
