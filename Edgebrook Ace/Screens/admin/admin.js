@@ -15,8 +15,9 @@ function numberVal(v, fallback = 0) {
 
 async function api(path, opts = {}) {
   const res = await fetch(path, opts);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const text = await res.text();
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}: ${text}`);
+  return text ? JSON.parse(text) : {};
 }
 
 function renderLogin() {
