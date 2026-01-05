@@ -182,8 +182,8 @@
       <textarea name="notes" placeholder="Any special instructions or comments"></textarea>
 
       <div class="summary">
-        <p id="summary-quantity">Total Screens: 0</p>
-        <p id="summary-screen-total">Screen Total: $0.00</p>
+        <p id="summary-quantity">Total Repairs: 0</p>
+        <p id="summary-screen-total">Repair Total: $0.00</p>
         <p id="summary-labor">Labor Charge: $0.00</p>
         <p id="summary-tax">Tax: $0.00</p>
         <p id="summary-grand">Grand Total: $0.00</p>
@@ -194,7 +194,17 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load pricing data
+      let PRICING;
+
+      async function loadPricing(){
+        const res = await fetch("/.netlify/functions/pricing_get", { cache: "no-store" });
+        PRICING = await res.json();
+      }
+
+      await loadPricing();
+
       // Auto-populate date
       const today = new Date();
       document.getElementById('repair-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -212,32 +222,22 @@
       phoneInput.addEventListener('input', formatPhone);
       phoneInput.addEventListener('blur', formatPhone);
 
-      const TAX_RATE = 0.1025;
-      const SET_SIZES = [
-        { w: 24, h: 30, labor: 20, prices: { 'Silver Fiber': 10, 'Black Fiber': 10, 'Silver Aluminum': 13, 'Black Aluminum': 13, 'Pet Screen': 18, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 24, h: 36, labor: 20, prices: { 'Silver Fiber': 12, 'Black Fiber': 12, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 20, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 30, h: 30, labor: 20, prices: { 'Silver Fiber': 13, 'Black Fiber': 13, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 23, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 30, h: 36, labor: 20, prices: { 'Silver Fiber': 13, 'Black Fiber': 10, 'Silver Aluminum': 18, 'Black Aluminum': 18, 'Pet Screen': 21, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 30, h: 42, labor: 20, prices: { 'Silver Fiber': 14, 'Black Fiber': 14, 'Silver Aluminum': 20, 'Black Aluminum': 20, 'Pet Screen': 26, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 36, h: 48, labor: 20, prices: { 'Silver Fiber': 17, 'Black Fiber': 17, 'Silver Aluminum': 24, 'Black Aluminum': 24, 'Pet Screen': 27, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 48, h: 48, labor: 30, prices: { 'Silver Fiber': 17, 'Black Fiber': 17, 'Silver Aluminum': 24, 'Black Aluminum': 24, 'Pet Screen': 32, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 36, h: 78, labor: 30, prices: { 'Silver Fiber': 21, 'Black Fiber': 21, 'Silver Aluminum': 31, 'Black Aluminum': 31, 'Pet Screen': 42, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } },
-        { w: 48, h: 72, labor: 30, prices: { 'Silver Fiber': 22, 'Black Fiber': 22, 'Silver Aluminum': 31, 'Black Aluminum': 31, 'Pet Screen': 43, 'SS Glass': 0.55, 'DS Glass': 0.60, 'Plexiglass': 0.75 } }
-      ];
+      const TAX_RATE = PRICING.taxRate;
+      const CORNER_PRICE = PRICING.cornerPrice;
 
-      function nearestSize(w, h) {
-        let best = SET_SIZES[0];
+      const SCREEN_PRESETS = PRICING.screenPresets;
+      const GLASS_PRESETS = PRICING.glassPresets;
+
+      function nearestSize(presets, w, h) {
+        let best = presets[0];
         const sum = w + h;
-        SET_SIZES.forEach(s => {
-          const diff = Math.abs((s.w + s.h) - sum);
+
+        presets.forEach(curr => {
+          const diff = Math.abs((curr.w + curr.h) - sum);
           const bestDiff = Math.abs((best.w + best.h) - sum);
-          if (diff < bestDiff) best = s;
+          if (diff < bestDiff) best = curr;
         });
         return best;
-      }
-
-      function calculateGlassCost(w, h, rate) {
-        return (w + h) * rate;
       }
 
       const screensContainer = document.getElementById('screens-container');
@@ -249,41 +249,69 @@
       const sumGrand = document.getElementById('summary-grand');
 
       function updateSummary() {
-        let totalQty = 0, screenSum = 0, laborSum = 0;
+        let totalQty = 0, materialsAndCorners = 0, laborSum = 0;
+
         screensContainer.querySelectorAll('.screen-group').forEach(g => {
-          const t = parseFloat(g.querySelector('.total-price').textContent.split('$')[1]) || 0;
-          const q = parseInt(g.querySelector('[name="quantity"]').value) || 0;
-          const l = parseFloat(g.dataset.labor) || 0;
-          totalQty += q;
-          screenSum += t;
-          laborSum += (l * q) * .5;
+          const qty = parseInt(g.querySelector('[name="quantity"]').value) || 0;
+          const lineTotal = parseFloat(g.querySelector('.total-price').textContent.split('$')[1]) || 0;
+          const unitLabor = parseFloat(g.dataset.labor) || 0;
+          totalQty += qty;
+          materialsAndCorners += lineTotal;
+          laborSum += unitLabor * qty;
         });
-        const tax = screenSum * TAX_RATE;
-        sumQty.textContent = `Total Screens: ${totalQty}`;
-        sumScr.textContent = `Screen Total: $${screenSum.toFixed(2)}`;
+        const subtotal = materialsAndCorners;
+        const tax = subtotal * TAX_RATE;
+        sumQty.textContent = `Total Repairs: ${totalQty}`;
+        sumScr.textContent = `Repair Total: $${(subtotal - laborSum).toFixed(2)}`;
         sumLab.textContent = `Labor Charge: $${(laborSum).toFixed(2)}`;
         sumTax.textContent = `Tax: $${tax.toFixed(2)}`;
-        sumGrand.textContent = `Grand Total: $${(screenSum + laborSum + tax).toFixed(2)}`;
+        sumGrand.textContent = `Grand Total: $${(subtotal + tax).toFixed(2)}`;
       }
 
       function updatePrices(g) {
         const w = parseFloat(g.querySelector('[name="screenWidth"]').value) || 0;
         const h = parseFloat(g.querySelector('[name="screenHeight"]').value) || 0;
-        const preset = nearestSize(w, h);
-        g.dataset.labor = preset.labor;
         const qty = parseInt(g.querySelector('[name="quantity"]').value) || 0;
         const mat = g.querySelector('[name="material"]').value;
-        let unitCost = ['SS Glass', 'DS Glass', 'Plexiglass'].includes(mat)
-          ? calculateGlassCost(w, h, preset.prices[mat] || 0)
-          : (preset.prices[mat] || 0);
-        const addC = g.querySelector('[name="addCorners"]').checked;
+
+        const isGlass = ['SS Glass', 'DS Glass', 'Plexiglass'].includes(mat);
+
+        let unitCost = 0;
+        let unitLabor = 0;
+        let sku = "";
+
+        if (isGlass) {
+          const preset = nearestSize(GLASS_PRESETS, w, h);
+          unitCost = Number(preset?.price) || 0;
+          unitLabor = Number(preset?.labor) || 0;
+          sku = preset?.sku || "";
+        } else {
+          const preset = nearestSize(SCREEN_PRESETS, w, h);
+          unitCost = Number(preset?.materials?.[mat]?.price) || 0;
+          unitLabor = Number(preset?.laborDefault) || 0;
+        }
+
+        // Save for summary
+        g.dataset.labor = unitLabor;
+        g.dataset.sku = sku;
+
+        //Corners
+        const addC = g.querySelector("[name='addCorners']").checked;
         const cq = parseInt(g.querySelector('[name="cornerQty"]').value) || 0;
-        const cornerCost = addC ? cq * 7 : 0;
+        const cornerCost = addC ? cq * CORNER_PRICE : 0;
+
         g.querySelector('[name="cornerQty"]').disabled = !addC;
-        g.querySelector('.unit-price').textContent = `Unit: $${unitCost.toFixed(2)}`;
+
+        // Display unit price and sku
+        g.querySelector('.unit-price').textContent = 
+          sku ? `Unit: $${unitCost.toFixed(2)} (SKU: ${sku}) + Labor: $${unitLabor.toFixed(2)}` :
+                `Unit: $${unitCost.toFixed(2)} + Labor: $${unitLabor.toFixed(2)}`;
         g.querySelector('.corner-price').textContent = `Corners: $${cornerCost.toFixed(2)}`;
-        const total = unitCost * qty + cornerCost;
+
+        // Total (material only + corners) — labor stays separate in summary
+        const total = (unitCost + unitLabor) * qty + cornerCost;
         g.querySelector('.total-price').textContent = `Total: $${total.toFixed(2)}`;
+
         updateSummary();
       }
 
@@ -333,13 +361,15 @@
             const q = parseInt(g.querySelector('[name="quantity"]').value) || 0;
             const mat = g.querySelector('[name="material"]').value;
             const unitText = g.querySelector('.unit-price').textContent;
+            const sku = g.dataset.sku || "";
+            const unitLabor = parseFloat(g.dataset.labor) || 0;
             const cornerQty = parseInt(g.querySelector('[name="cornerQty"]').value) || 0;
             const cornerCost = parseFloat(g.querySelector('.corner-price').textContent.split('$')[1]) || 0;
             const totalText = g.querySelector('.total-price').textContent;
             rows += `<tr><th>Screen ${i + 1}</th><td>
         Size: ${w}" × ${h}"<br>
         Quantity: ${q}<br>
-        Material: ${mat}<br>
+        Material: ${mat}${sku ? ` (SKU: ${sku})` : "" }<br>
         ${unitText}<br>
         Corners Quantity: ${cornerQty}<br>
         Corners Cost: $${cornerCost.toFixed(2)}<br>
@@ -366,8 +396,8 @@
           <tr><th>Phone</th><td>${phone}</td></tr>
           <tr><th>Notes</th><td>${notes}</td></tr>
           ${rows}
-          <tr><th>Total Screens</th><td>${totalQty}</td></tr>
-          <tr><th>Screen Total</th><td>$${screenTotal}</td></tr>
+          <tr><th>Total Repairs</th><td>${totalQty}</td></tr>
+          <tr><th>Repair Total</th><td>$${screenTotal}</td></tr>
           <tr><th>Labor Charge</th><td>$${laborTotal}</td></tr>
           <tr><th>Tax</th><td>$${taxTotal}</td></tr>
           <tr><th>Grand Total</th><td>$${grandTotal}</td></tr>
@@ -383,6 +413,10 @@
         };
 
         const newWin = window.open('', '_blank');
+        if (!newWin){
+          alert("Popup blocked. Allow popups for thgis site to generate the form");
+          return;
+        }
         newWin.document.write(`
     <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Repair Details</title>
     <style>

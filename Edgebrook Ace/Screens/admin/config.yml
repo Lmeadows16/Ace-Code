@@ -1,0 +1,26 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_foler: "assets/uploads"
+public_folder: "/assets/uploads"
+
+collections:
+  - name: "pricing"
+    label: "Pricing"
+    files:
+      - file: "data/prices.json"
+        label: "Prices"
+        name: "prices"
+        fields:
+          - { label: "Tax Rate", name: "taxRate", widget: "number", value_type: "float" }
+          - { label: "Corner Price", name: "cornerPrice", widget: "number", value_type: "float" }
+          - label: "Glass Presets"
+            name: "glassPresets"
+            widget: "list"
+            fields:
+              - { label: "SKU", name: "sku", widget: "string" }
+              - { label: "Width", name: "w", widget: "number", value_type: "int" }
+              - { label: "Height", name: "h", widget: "number", value_type: "int" }
+              - { label: "Price", name: "price", widget: "number", value_type: "float" }
+              - { label: "Labor", name: "labor", widget: "number", value_type: "float" }

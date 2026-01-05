@@ -1,0 +1,99 @@
+{
+    "taxRate": 0.1025,
+    "cornerPrice": 7,
+
+    "screenPresets": [
+        { "w": 24, "h": 30, "laborDefault": 20, 
+            "materials": { 
+                "Silver Fiber": { "price": 10, "labor": 20},
+                "Black Fiber": { "price": 10, "labor": 20},
+                "Silver Aluminum": { "price": 13, "labor": 20},
+                "Black Aluminum": { "price": 13, "labor": 20},
+                "Pet Screen": { "price": 18, "labor": 20}
+            }
+        },
+        { "w": 24, "h": 36, "laborDefault": 20, 
+            "materials": { 
+                "Silver Fiber": { "price": 12, "labor": 20},
+                "Black Fiber": { "price": 12, "labor": 20},
+                "Silver Aluminum": { "price": 18, "labor": 20},
+                "Black Aluminum": { "price": 18, "labor": 20},
+                "Pet Screen": { "price": 20, "labor": 20}
+            }
+        },
+        { "w": 30, "h": 30, "laborDefault": 20, 
+            "materials": { 
+                "Silver Fiber": { "price": 13, "labor": 20},
+                "Black Fiber": { "price": 13, "labor": 20},
+                "Silver Aluminum": { "price": 18, "labor": 20},
+                "Black Aluminum": { "price": 18, "labor": 20},
+                "Pet Screen": { "price": 23, "labor": 20}
+            }
+        },
+        { "w": 30, "h": 36, "laborDefault": 20, 
+            "materials": { 
+                "Silver Fiber": { "price": 13, "labor": 20},
+                "Black Fiber": { "price": 13, "labor": 20},
+                "Silver Aluminum": { "price": 18, "labor": 20},
+                "Black Aluminum": { "price": 18, "labor": 20},
+                "Pet Screen": { "price": 21, "labor": 20}
+            }
+        },
+        { "w": 30, "h": 42, "laborDefault": 20, 
+            "materials": { 
+                "Silver Fiber": { "price": 14, "labor": 20},
+                "Black Fiber": { "price": 14, "labor": 20},
+                "Silver Aluminum": { "price": 20, "labor": 20},
+                "Black Aluminum": { "price": 20, "labor": 20},
+                "Pet Screen": { "price": 26, "labor": 20}
+            }
+        },
+        { "w": 36, "h": 48, "laborDefault": 20, 
+            "materials": { 
+                "Silver Fiber": { "price": 17, "labor": 20},
+                "Black Fiber": { "price": 17, "labor": 20},
+                "Silver Aluminum": { "price": 24, "labor": 20},
+                "Black Aluminum": { "price": 24, "labor": 20},
+                "Pet Screen": { "price": 27, "labor": 20}
+            }
+        },
+        { "w": 48, "h": 48, "laborDefault": 30, 
+            "materials": { 
+                "Silver Fiber": { "price": 17, "labor": 30},
+                "Black Fiber": { "price": 17, "labor": 30},
+                "Silver Aluminum": { "price": 24, "labor": 30},
+                "Black Aluminum": { "price": 24, "labor": 30},
+                "Pet Screen": { "price": 32, "labor": 30}
+            }
+        },
+        { "w": 36, "h": 78, "laborDefault": 30, 
+            "materials": { 
+                "Silver Fiber": { "price": 21, "labor": 30},
+                "Black Fiber": { "price": 21, "labor": 30},
+                "Silver Aluminum": { "price": 31, "labor": 30},
+                "Black Aluminum": { "price": 31, "labor": 30},
+                "Pet Screen": { "price": 42, "labor": 30}
+            }
+        },
+        { "w": 48, "h": 72, "laborDefault": 30, 
+            "materials": { 
+                "Silver Fiber": { "price": 22, "labor": 30},
+                "Black Fiber": { "price": 22, "labor": 30},
+                "Silver Aluminum": { "price": 31, "labor": 30},
+                "Black Aluminum": { "price": 31, "labor": 30},
+                "Pet Screen": { "price": 43, "labor": 30}
+            }
+        }
+    ],
+
+    "glassPresets":[
+        { "sku": "11504", "w": 12, "h": 16, "price": 9.99, "labor": 30},
+        { "sku": "11518", "w": 16, "h": 20, "price": 12.99, "labor": 30},
+        { "sku": "11528", "w": 20, "h": 24, "price": 17.99, "labor": 30},
+        { "sku": "11534", "w": 24, "h": 30, "price": 22.99, "labor": 30},
+        { "sku": "11542", "w": 28, "h": 30, "price": 27.99, "labor": 30},
+        { "sku": "11546", "w": 30, "h": 32, "price": 29.99, "labor": 30},
+        { "sku": "11945", "w": 36, "h": 36, "price": 36.99, "labor": 30},
+        { "sku": "11551", "w": 36, "h": 44, "price": 39.99, "labor": 30}
+    ]
+}
