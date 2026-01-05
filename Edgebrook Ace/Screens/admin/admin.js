@@ -3,9 +3,9 @@ let token = null;
 let pricing = null;
 
 function el(html) {
-  const d = document.createElement("div");
-  d.innerHTML = html.trim();
-  return d.firstChild;
+  const template = document.createElement("template");
+  template.innerHTML = html.trim();
+  return template.content.firstElementChild;
 }
 
 function numberVal(v, fallback = 0) {
