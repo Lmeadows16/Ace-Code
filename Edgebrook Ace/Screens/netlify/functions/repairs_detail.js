@@ -15,15 +15,21 @@ function verifyTokenFromHeaders(headers = {}) {
 
   const [payloadB64, sigHex] = parts;
 
+  let payloadJson;
+  try {
+    payloadJson = Buffer.from(payloadB64, "base64url").toString("utf8");
+  } catch {
+    return false;
+  }
+
   const expectedSig = crypto
     .createHmac("sha256", secret)
-    .update(payloadB64)
+    .update(payloadJson)          // sign the raw JSON string
     .digest("hex");
 
   if (expectedSig !== sigHex) return false;
 
   try {
-    const payloadJson = Buffer.from(payloadB64, "base64url").toString("utf8");
     const payload = JSON.parse(payloadJson);
     if (payload.exp && Date.now() > payload.exp) return false;
     return true;
