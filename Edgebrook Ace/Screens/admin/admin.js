@@ -13,12 +13,24 @@ function numberVal(v, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+// async function api(path, opts = {}) {
+//   const res = await fetch(path, opts);
+//   const text = await res.text();
+//   if (!res.ok) throw new Error(`${res.status} ${res.statusText}: ${text}`);
+//   return text ? JSON.parse(text) : {};
+// }
+
 async function api(path, opts = {}) {
+  if (typeof path !== "string") {
+    console.error("api() called with NON-string path:", path);
+    throw new Error("api() path must be a string (see console for caller).");
+  }
   const res = await fetch(path, opts);
   const text = await res.text();
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}: ${text}`);
+  if (!res.ok) throw new Error(`${path} -> ${res.status} ${res.statusText}: ${text}`);
   return text ? JSON.parse(text) : {};
 }
+
 
 function money(n) {
   return `$${numberVal(n, 0).toFixed(2)}`;
