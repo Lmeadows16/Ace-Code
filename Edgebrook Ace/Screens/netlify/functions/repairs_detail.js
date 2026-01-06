@@ -1,16 +1,17 @@
+// netlify/functions/repairs_detail.js
 const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
 
-function verifyExplain(headers = {}) {
+function verifyTokenFromHeaders(headers = {}) {
   const raw = headers.authorization || headers.Authorization || "";
   const token = raw.startsWith("Bearer ") ? raw.slice(7).trim() : "";
-  if (!token) return { ok: false, why: "missing token" };
+  if (!token) return false;
 
   const secret = process.env.ADMIN_TOKEN_SECRET;
-  if (!secret) return { ok: false, why: "missing ADMIN_TOKEN_SECRET" };
+  if (!secret) return false;
 
   const parts = token.split(".");
-  if (parts.length !== 2) return { ok: false, why: `bad token parts (${parts.length})` };
+  if (parts.length !== 2) return false;
 
   const [payloadB64, sigHex] = parts;
 
@@ -19,54 +20,17 @@ function verifyExplain(headers = {}) {
     .update(payloadB64)
     .digest("hex");
 
-  if (expectedSig !== sigHex) {
-    return { ok: false, why: "signature mismatch", expectedSig, gotSig: sigHex, payloadB64 };
-  }
+  if (expectedSig !== sigHex) return false;
 
-  let payload;
   try {
-    payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
-  } catch (e) {
-    return { ok: false, why: "payload decode failed", err: String(e) };
+    const payloadJson = Buffer.from(payloadB64, "base64url").toString("utf8");
+    const payload = JSON.parse(payloadJson);
+    if (payload.exp && Date.now() > payload.exp) return false;
+    return true;
+  } catch {
+    return false;
   }
-
-  if (payload.exp && Date.now() > payload.exp) {
-    return { ok: false, why: "token expired", exp: payload.exp, now: Date.now(), payload };
-  }
-
-  return { ok: true, payload };
 }
-
-
-// function verifyTokenFromHeaders(headers = {}) {
-//   const raw = headers.authorization || headers.Authorization || "";
-//   const token = raw.startsWith("Bearer ") ? raw.slice(7).trim() : "";
-//   if (!token) return false;
-
-//   const secret = process.env.ADMIN_TOKEN_SECRET;
-//   if (!secret) return false; // prevents accidental "always fail" without secret
-
-//   const parts = token.split(".");
-//   if (parts.length !== 2) return false;
-
-//   const [payloadB64, sigHex] = parts;
-
-//   const expectedSig = crypto
-//     .createHmac("sha256", secret)
-//     .update(payloadB64)
-//     .digest("hex");
-
-//   if (expectedSig !== sigHex) return false;
-
-//   try {
-//     const payloadJson = Buffer.from(payloadB64, "base64url").toString("utf8");
-//     const payload = JSON.parse(payloadJson);
-//     if (payload.exp && Date.now() > payload.exp) return false;
-//     return true;
-//   } catch {
-//     return false;
-//   }
-// }
 
 exports.handler = async (event) => {
   try {
@@ -74,7 +38,7 @@ exports.handler = async (event) => {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
 
-    // verify using BOTH header casings
+    // ✅ Use the function that exists above
     if (!verifyTokenFromHeaders(event.headers || {})) {
       return { statusCode: 401, body: "Unauthorized" };
     }
@@ -120,43 +84,6 @@ exports.handler = async (event) => {
         body: JSON.stringify({ error: "Items query failed", details: iErr })
       };
     }
-
-    function verifyExplain(headers = {}) {
-      const raw = headers.authorization || headers.Authorization || "";
-      const token = raw.startsWith("Bearer ") ? raw.slice(7).trim() : "";
-      if (!token) return { ok: false, why: "missing token" };
-
-      const secret = process.env.ADMIN_TOKEN_SECRET;
-      if (!secret) return { ok: false, why: "missing ADMIN_TOKEN_SECRET" };
-
-      const parts = token.split(".");
-      if (parts.length !== 2) return { ok: false, why: `bad token parts (${parts.length})` };
-
-      const [payloadB64, sigHex] = parts;
-
-      const expectedSig = crypto
-        .createHmac("sha256", secret)
-        .update(payloadB64)
-        .digest("hex");
-
-      if (expectedSig !== sigHex) {
-        return { ok: false, why: "signature mismatch", expectedSig, gotSig: sigHex, payloadB64 };
-      }
-
-      let payload;
-      try {
-        payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
-      } catch (e) {
-        return { ok: false, why: "payload decode failed", err: String(e) };
-      }
-
-      if (payload.exp && Date.now() > payload.exp) {
-        return { ok: false, why: "token expired", exp: payload.exp, now: Date.now(), payload };
-      }
-
-      return { ok: true, payload };
-    }
-
 
     return {
       statusCode: 200,
