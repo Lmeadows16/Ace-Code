@@ -135,8 +135,10 @@
         <li>Write their first and last name, as well as how many screens they have on a piece of masking tape and stick
           it to the each screen in their service.</li>
         <li>E.g. "Joe Smith 1/2" etc.</li>
-        <li>If the screen needs corners replaced, tell the customer (if they don't ask for it) and check corners box in the screen container. Then update the quantity.</li>
-        <li><strong>Any repairs done to the frame (corners, unbending sides, etc.) need a screen replacement as well</strong></li>
+        <li>If the screen needs corners replaced, tell the customer (if they don't ask for it) and check corners box in
+          the screen container. Then update the quantity.</li>
+        <li><strong>Any repairs done to the frame (corners, unbending sides, etc.) need a screen replacement as
+            well</strong></li>
       </ul>
     </div>
 
@@ -203,7 +205,7 @@
       // Load pricing data
       let PRICING;
 
-      async function loadPricing(){
+      async function loadPricing() {
         const res = await fetch("/.netlify/functions/pricing_get", { cache: "no-store" });
         PRICING = await res.json();
       }
@@ -223,7 +225,7 @@
       let empLookupTimer = null;
 
       async function lookupEmpName(id) {
-        const res = await fetch(`/.netlify/functions/employee_lookup?id=${encodeURIComponent(id)}`, {cache: "no-store"});
+        const res = await fetch(`/.netlify/functions/employee_lookup?id=${encodeURIComponent(id)}`, { cache: "no-store" });
 
         if (!res.ok) return null
         return res.json();
@@ -249,7 +251,7 @@
           else setEmployeeUI(null);
         }, 300);
       });
-      
+
       // Phone formatting
       const phoneInput = document.getElementById('phone-input');
       function formatPhone(e) {
@@ -344,9 +346,9 @@
         g.querySelector('[name="cornerQty"]').disabled = !addC;
 
         // Display unit price and sku
-        g.querySelector('.unit-price').textContent = 
+        g.querySelector('.unit-price').textContent =
           sku ? `Unit: $${unitCost.toFixed(2)} (SKU: ${sku}) + Labor: $${unitLabor.toFixed(2)}` :
-                `Unit: $${unitCost.toFixed(2)} + Labor: $${unitLabor.toFixed(2)}`;
+            `Unit: $${unitCost.toFixed(2)} + Labor: $${unitLabor.toFixed(2)}`;
         g.querySelector('.corner-price').textContent = `Corners: $${cornerCost.toFixed(2)}`;
 
         // Total (material only + corners) — labor stays separate in summary
@@ -386,6 +388,18 @@
           e.target.reportValidity();
           return;
         }
+
+        const enteredId = document.getElementById("employee-id").value.trim();
+        if (!enteredId || !employeeName) {
+          alert("Employee ID not found. Please enter a valid Employee ID.");
+          return;
+        }
+
+        function moneyFromText(text) {
+          const m = String(text || "").match(/\$([0-9]+(?:\.[0-9]{1,2})?)/);
+          return m ? parseFloat(m[1]) : 0;
+        }
+
         e.preventDefault();
 
         const form = new FormData(e.target);
@@ -393,6 +407,66 @@
         const date = form.get('date');
         const name = form.get('customerName');
         const phone = form.get('phoneNumber');
+
+        // Save to supabase history
+        const totalQtyNum = parseInt(sumQty.textContent.split(': ')[1]) || 0;
+
+        const repairTotals = {
+          screen_total: parseFloat(sumScr.textContent.split('$')[1]) || 0,
+          labor_total: parseFloat(sumLab.textContent.split('$')[1]) || 0,
+          tax_total: parseFloat(sumTax.textContent.split('$')[1]) || 0,
+          grand_total: parseFloat(sumGrand.textContent.split('$')[1]) || 0
+        };
+
+        const repair = {
+          employee_id: enteredId,
+          employee_name: employeeName,
+          repair_date: date,                 // must be YYYY-MM-DD
+          customer_name: name,
+          phone: phone,
+          notes: notes || "",
+          total_screens: totalQtyNum,
+          screen_total: repairTotals.screen_total,
+          labor_total: repairTotals.labor_total,
+          tax_total: repairTotals.tax_total,
+          grand_total: repairTotals.grand_total
+        };
+
+        const items = [];
+        screensContainer.querySelectorAll('.screen-group').forEach((g) => {
+          const w = parseFloat(g.querySelector('[name="screenWidth"]').value) || 0;
+          const h = parseFloat(g.querySelector('[name="screenHeight"]').value) || 0;
+          const q = parseInt(g.querySelector('[name="quantity"]').value) || 0;
+          const mat = g.querySelector('[name="material"]').value || "";
+          const sku = (g.dataset.sku || "").trim();
+
+          const unitText = g.querySelector('.unit-price')?.textContent || "";
+          const unitPrice = moneyFromText(unitText);              // parses first $ in "Unit: $X ..."
+          const unitLabor = parseFloat(g.dataset.labor) || 0;
+
+          const cornerQty = parseInt(g.querySelector('[name="cornerQty"]').value) || 0;
+          const cornerCost = moneyFromText(g.querySelector('.corner-price')?.textContent || "Corners: $0");
+          const lineTotal = moneyFromText(g.querySelector('.total-price')?.textContent || "Total: $0");
+
+          items.push({
+            width: w,
+            height: h,
+            quantity: q,
+            material: mat,
+            sku: sku || null,
+            unit_price: unitPrice,
+            unit_labor: unitLabor,
+            corner_qty: cornerQty,
+            corner_cost: cornerCost,
+            line_total: lineTotal
+          });
+        });
+
+        fetch("/.netlify/functions/repairs_create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repair, items })
+        }).catch(err => console.error("History save failed: ", err));
 
         let buildReceipt = (label) => {
           let rows = '';
@@ -410,7 +484,7 @@
             rows += `<tr><th>Screen ${i + 1}</th><td>
         Size: ${w}" × ${h}"<br>
         Quantity: ${q}<br>
-        Material: ${mat}${sku ? ` (SKU: ${sku})` : "" }<br>
+        Material: ${mat}${sku ? ` (SKU: ${sku})` : ""}<br>
         ${unitText}<br>
         Corners Quantity: ${cornerQty}<br>
         Corners Cost: $${cornerCost.toFixed(2)}<br>
@@ -455,7 +529,7 @@
         };
 
         const newWin = window.open('', '_blank');
-        if (!newWin){
+        if (!newWin) {
           alert("Popup blocked. Allow popups for thgis site to generate the form");
           return;
         }
