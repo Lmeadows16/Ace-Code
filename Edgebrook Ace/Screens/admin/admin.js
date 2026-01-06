@@ -392,9 +392,9 @@ function renderEditor() {
           <div><b>Employee:</b> ${repair.employee_name} (${repair.employee_id})</div>
           <div><b>Customer:</b> ${repair.customer_name}</div>
           <div><b>Phone:</b> ${repair.phone}</div>
-          <div><b>Total Repairs:</b> ${repair.total_screens}</div>
+          <div><b>Total Repairs:</b> ${repair.total_repairs}</div>
           <div style="grid-column:1/-1"><b>Notes:</b> ${repair.notes || ""}</div>
-          <div><b>Repair Total:</b> ${money(repair.screen_total)}</div>
+          <div><b>Repair Total:</b> ${money(repair.repair_total)}</div>
           <div><b>Labor:</b> ${money(repair.labor_total)}</div>
           <div><b>Tax:</b> ${money(repair.tax_total)}</div>
           <div><b>Grand Total:</b> ${money(repair.grand_total)}</div>
@@ -468,7 +468,7 @@ function renderEditor() {
           <td>${r.employee_name} (${r.employee_id})</td>
           <td>${r.customer_name}</td>
           <td style="white-space:nowrap">${r.phone}</td>
-          <td style="text-align:center">${r.total_screens}</td>
+          <td style="text-align:center">${total_repairs}</td>
           <td style="white-space:nowrap">${money(r.grand_total)}</td>
           </tr>`);
 
