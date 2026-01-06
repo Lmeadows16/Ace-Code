@@ -1,13 +1,13 @@
-// netlify/functions/repairs_detail.js
 const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
 
-function verifyToken(authHeader) {
-  // Same logic as your pricing_save.js
-  const raw = authHeader || "";
+function verifyTokenFromHeaders(headers = {}) {
+  const raw = headers.authorization || headers.Authorization || "";
   const token = raw.startsWith("Bearer ") ? raw.slice(7).trim() : "";
-
   if (!token) return false;
+
+  const secret = process.env.ADMIN_TOKEN_SECRET;
+  if (!secret) return false; // prevents accidental "always fail" without secret
 
   const parts = token.split(".");
   if (parts.length !== 2) return false;
@@ -15,7 +15,7 @@ function verifyToken(authHeader) {
   const [payloadB64, sigHex] = parts;
 
   const expectedSig = crypto
-    .createHmac("sha256", process.env.ADMIN_TOKEN_SECRET)
+    .createHmac("sha256", secret)
     .update(payloadB64)
     .digest("hex");
 
@@ -37,13 +37,18 @@ exports.handler = async (event) => {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
 
-    if (!verifyToken(event.headers.authorization)) {
+    // ✅ verify using BOTH header casings
+    if (!verifyTokenFromHeaders(event.headers || {})) {
       return { statusCode: 401, body: "Unauthorized" };
     }
 
     const id = (event.queryStringParameters?.id || "").trim();
     if (!id) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Missing id" }) };
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Missing id" })
+      };
     }
 
     const supabase = createClient(
@@ -57,8 +62,12 @@ exports.handler = async (event) => {
       .eq("id", id)
       .single();
 
-    if (rErr) {
-      return { statusCode: 404, body: JSON.stringify({ error: "Repair not found", details: rErr }) };
+    if (rErr || !repair) {
+      return {
+        statusCode: 404,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Repair not found", details: rErr || null })
+      };
     }
 
     const { data: items, error: iErr } = await supabase
@@ -68,15 +77,24 @@ exports.handler = async (event) => {
       .order("id", { ascending: true });
 
     if (iErr) {
-      return { statusCode: 500, body: JSON.stringify({ error: "Items query failed", details: iErr }) };
+      return {
+        statusCode: 500,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Items query failed", details: iErr })
+      };
     }
 
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-      body: JSON.stringify({ repair, items })
+      body: JSON.stringify({ repair, items: items || [] })
     };
   } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ error: String(e) }) };
+    console.error("repairs_detail error:", e);
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: String(e?.message || e) })
+    };
   }
 };
