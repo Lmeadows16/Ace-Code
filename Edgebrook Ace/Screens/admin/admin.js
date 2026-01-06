@@ -36,11 +36,11 @@ function money(n) {
   return `$${numberVal(n, 0).toFixed(2)}`;
 }
 
-function apiAuth(path, opts = {}) {
+async function apiAuth(path, opts = {}) {
   return api(path, {
     ...opts,
     headers: {
-      ...api(opts.headers || {}),
+      ...(opts.headers || {}),
       "Authorization": `Bearer ${token}`
     }
   });
