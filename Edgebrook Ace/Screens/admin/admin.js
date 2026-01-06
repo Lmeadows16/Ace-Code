@@ -486,6 +486,7 @@ function renderEditor() {
 
           tr.onclick = async () => {
             try {
+              console.log("token exists?", !!token, token?.slice?.(0, 20));
               histStatus.textContent = "Loading details...";
               const detail = await apiAuth(`/.netlify/functions/repairs_detail?id=${encodeURIComponent(r.id)}`, {
                 cache: "no-store"
