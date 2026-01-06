@@ -412,7 +412,7 @@
         const totalQtyNum = parseInt(sumQty.textContent.split(': ')[1]) || 0;
 
         const repairTotals = {
-          screen_total: parseFloat(sumScr.textContent.split('$')[1]) || 0,
+          repair_total: parseFloat(sumScr.textContent.split('$')[1]) || 0,
           labor_total: parseFloat(sumLab.textContent.split('$')[1]) || 0,
           tax_total: parseFloat(sumTax.textContent.split('$')[1]) || 0,
           grand_total: parseFloat(sumGrand.textContent.split('$')[1]) || 0
@@ -425,8 +425,8 @@
           customer_name: name,
           phone: phone,
           notes: notes || "",
-          total_screens: totalQtyNum,
-          screen_total: repairTotals.screen_total,
+          total_repairs: totalQtyNum,
+          repair_total: repairTotals.screen_total,
           labor_total: repairTotals.labor_total,
           tax_total: repairTotals.tax_total,
           grand_total: repairTotals.grand_total
@@ -462,11 +462,32 @@
           });
         });
 
-        fetch("/.netlify/functions/repairs_create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ repair, items })
-        }).catch(err => console.error("History save failed: ", err));
+        // fetch("/.netlify/functions/repairs_create", {
+        //   method: "POST",
+        //   headers: { "Content-Type": "application/json" },
+        //   body: JSON.stringify({ repair, items })
+        // }).catch(err => console.error("History save failed: ", err));
+
+        (async () => {
+          try {
+            const res = await fetch("/.netlify/functions/repairs_create", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ repair, items })
+            });
+
+            const text = await res.text();
+            if (!res.ok) {
+              console.error("repairs_create failed:", res.status, text);
+              alert("History save failed — open console for details.");
+            } else {
+              console.log("repairs_create ok:", text);
+            }
+          } catch (err) {
+            console.error("History save NETWORK failed:", err);
+          }
+        })();
+
 
         let buildReceipt = (label) => {
           let rows = '';
