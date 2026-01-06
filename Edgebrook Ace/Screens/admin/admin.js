@@ -480,7 +480,7 @@ function renderEditor() {
           <td>${r.employee_name} (${r.employee_id})</td>
           <td>${r.customer_name}</td>
           <td style="white-space:nowrap">${r.phone}</td>
-          <td style="text-align:center">${total_repairs}</td>
+          <td style="text-align:center">${r.total_repairs}</td>
           <td style="white-space:nowrap">${money(r.grand_total)}</td>
           </tr>`);
 
