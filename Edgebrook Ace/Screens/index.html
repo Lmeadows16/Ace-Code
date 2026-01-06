@@ -143,6 +143,11 @@
     <form id="repairForm">
       <label>Date</label>
       <input id="repair-date" type="date" name="date" required>
+      <label>Employee ID</label>
+      <input id="employee-id" type="text" name="employeeId" placeholder="e.g 52" required>
+      <div id="employee-name-display" style="margin-top:0.5rem;font-weight:bold;">
+        Employee: -
+      </div>
       <label>Customer Full Name</label>
       <input type="text" name="customerName" placeholder="e.g. Jane Doe" required>
       <label>Phone Number</label>
@@ -209,6 +214,42 @@
       const today = new Date();
       document.getElementById('repair-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+      // Fetch employee name
+      let employeeName = ""
+
+      const empIdInput = document.getElementById("employee-id");
+      const empNameDisplay = document.getElementById("employee-name-display");
+
+      let empLookupTimer = null;
+
+      async function lookupEmpName(id) {
+        const res = await fetch(`/.netlify/functions/employee_lookup?id=${encodeURIComponent(id)}`, {cache: "no-store"});
+
+        if (!res.ok) return null
+        return res.json();
+      }
+
+      function setEmployeeUI(name) {
+        employeeName = name || "";
+        empNameDisplay.textContent = `Emnployee: ${name || "Not Found"}`;
+      }
+
+      empIdInput.addEventListener("input", () => {
+        const id = empIdInput.value.trim();
+        setEmployeeUI("") // clear while typing
+        if (empLookupTimer) clearTimeout(empLookupTimer);
+
+        empLookupTimer = setTimeout(async () => {
+          if (!id) {
+            setEmployeeUI("");
+            return;
+          }
+          const data = await lookupEmpName(id);
+          if (data?.employeeName) setEmployeeUI(data.employeeName);
+          else setEmployeeUI(null);
+        }, 300);
+      });
+      
       // Phone formatting
       const phoneInput = document.getElementById('phone-input');
       function formatPhone(e) {
@@ -392,6 +433,7 @@
         </header>
         <table>
           <tr><th>Date</th><td>${date}</td></tr>
+          <tr><th>Employee</th><td>${employeeName ? employeeName : "-"} (ID: ${form.get('employeeId') || "-"})</td></tr>
           <tr><th>Customer</th><td>${name}</td></tr>
           <tr><th>Phone</th><td>${phone}</td></tr>
           <tr><th>Notes</th><td>${notes}</td></tr>
