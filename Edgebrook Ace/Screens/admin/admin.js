@@ -284,7 +284,7 @@ function renderEditor() {
           <table style="border-collapse:collapse;width:100%">
             <thead>
               <tr>
-                <th>Employee ID</th><th>Name</th><th>Active</th><th></th>
+                <th>Employee ID</th><th>Name</th><th></th>
               </tr>
             </thead>
             <tbody id="empBody"></tbody>
