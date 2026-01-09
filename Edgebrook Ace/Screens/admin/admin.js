@@ -298,17 +298,15 @@ function renderEditor() {
     const empBody = empNode.querySelector("#empBody");
     const empStatus = empNode.querySelector("#empStatus");
 
-    function addEmpRow(row = { employee_id: "", name: "", active: true }) {
+    function addEmpRow(row = { employee_id: "", name: ""}) {
       const tr = el(`<tr>
         <td><input data-k="id" style="width:140px" /></td>
         <td><input data-k="name" style="width:260px" /></td>
-        <td style="text-align:center"><input data-k="active" type="checkbox" /></td>
         <td><button data-del style="padding:4px 8px">X</button></td>
       </tr>`);
 
       tr.querySelector('[data-k="id"]').value = row.employee_id ?? "";
       tr.querySelector('[data-k="name"]').value = row.name ?? "";
-      tr.querySelector('[data-k="active"]').checked = !!row.active;z
       tr.querySelector('[data-del]').onclick = () => tr.remove();
       empBody.appendChild(tr);
     }
@@ -322,7 +320,6 @@ function renderEditor() {
         const payload = Array.from(empBody.querySelectorAll("tr")).map(tr => ({
           employee_id: tr.querySelector('[data-k="id"]').value.trim(),
           name: tr.querySelector('[data-k="name"]').value.trim(),
-          active: tr.querySelector('[data-k="active"]').checked
         })).filter(e => e.employee_id && e.name);
 
         await api("/.netlify/functions/employees_save", {
