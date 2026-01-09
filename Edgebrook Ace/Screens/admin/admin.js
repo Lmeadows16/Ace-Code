@@ -308,7 +308,7 @@ function renderEditor() {
 
       tr.querySelector('[data-k="id"]').value = row.employee_id ?? "";
       tr.querySelector('[data-k="name"]').value = row.name ?? "";
-      tr.querySelector('[data-k="active"]').checked = !!row.active;
+      tr.querySelector('[data-k="active"]').checked = !!row.active;z
       tr.querySelector('[data-del]').onclick = () => tr.remove();
       empBody.appendChild(tr);
     }

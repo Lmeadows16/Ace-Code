@@ -49,7 +49,6 @@ exports.handler = async (event) => {
             .map (e => ({
                 employee_id: String(e.employee_id).trim(),
                 name: String(e.name).trim(),
-                active: !!e.active
             }))
     );
 
