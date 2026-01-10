@@ -298,7 +298,7 @@ function renderEditor() {
     const empBody = empNode.querySelector("#empBody");
     const empStatus = empNode.querySelector("#empStatus");
 
-    function addEmpRow(row = { employee_id: "", name: ""}) {
+    function addEmpRow(row = { employee_id: "", name: "" }) {
       const tr = el(`<tr>
         <td><input data-k="id" style="width:140px" /></td>
         <td><input data-k="name" style="width:260px" /></td>
@@ -343,6 +343,86 @@ function renderEditor() {
   function renderHistoryTab() {
     tabContent.innerHTML = "";
 
+    function openReprintWindow(repair, items) {
+      const rows = items.map((it, idx) => `
+    <tr>
+      <th>Repair ${idx + 1}</th>
+      <td>
+        Size: ${it.width}" × ${it.height}"<br>
+        Quantity: ${it.quantity}<br>
+        Material: ${it.material}${it.sku ? ` (SKU: ${it.sku})` : ""}<br>
+        Unit Price: ${money(it.unit_price)}<br>
+        Unit Labor: ${money(it.unit_labor)}<br>
+        Corners Qty: ${it.corner_qty || 0}<br>
+        Corners Cost: ${money(it.corner_cost)}<br>
+        Line Total: ${money(it.line_total)}
+      </td>
+    </tr>
+  `).join("");
+
+      const html = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Repair Invoice</title>
+    <style>
+      body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 2rem; }
+      .output-container { margin: 0 auto; max-width: 700px; background: #fff; padding: 1rem; border: 2px solid #333; border-radius: 6px; }
+      h2 { text-align:center; margin: 0 0 8px 0; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; padding: .75rem; border-bottom: 1px solid #ccc; vertical-align: top; }
+      th { background: #f2f2f2; width: 30%; }
+      .disclaimer { text-align:center; font-style: italic; margin-top: 16px; }
+      @media print { body { background: white; padding: 0; } .output-container { border: none; border-radius: 0; } }
+    </style>
+  </head>
+  <body>
+    <div class="output-container">
+      <h2>Screen Repair Details — Reprint</h2>
+      <p style="text-align:center;font-style:italic;margin-top:0;">5423 W. Devon Ave | (773) 775-7205</p>
+
+      <table>
+        <tr><th>Created</th><td>${new Date(repair.created_at).toLocaleString()}</td></tr>
+        <tr><th>Repair Date</th><td>${repair.repair_date || ""}</td></tr>
+        <tr><th>Employee</th><td>${repair.employee_name || "-"} (ID: ${repair.employee_id || "-"})</td></tr>
+        <tr><th>Customer</th><td>${repair.customer_name || ""}</td></tr>
+        <tr><th>Phone</th><td>${repair.phone || ""}</td></tr>
+        <tr><th>Notes</th><td>${repair.notes || ""}</td></tr>
+
+        ${rows}
+
+        <tr><th>Total Repairs</th><td>${repair.total_repairs || 0}</td></tr>
+        <tr><th>Repair Total</th><td>${money(repair.repair_total)}</td></tr>
+        <tr><th>Labor Charge</th><td>${money(repair.labor_total)}</td></tr>
+        <tr><th>Tax</th><td>${money(repair.tax_total)}</td></tr>
+        <tr><th>Grand Total</th><td>${money(repair.grand_total)}</td></tr>
+      </table>
+
+      <p class="disclaimer">
+        Please allow for 7-10 days for all screens and windows, we will call if finished early.<br/>
+        We are not responsible for screens or windows 30 days after repair.
+      </p>
+    </div>
+
+    <script>
+      // Optional: auto-open print dialog
+      window.onload = () => window.print();
+    </script>
+  </body>
+  </html>
+  `;
+
+      const win = window.open("", "_blank");
+      if (!win) {
+        alert("Popup blocked. Allow popups to reprint invoices.");
+        return;
+      }
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    }
+
     const histNode = el(`
       <div>
         <h3>Repair History</h3>
@@ -370,6 +450,7 @@ function renderEditor() {
                 <th>Phone</th>
                 <th>Total Repairs</th>
                 <th>Grand Total</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="histBody"></tbody>
@@ -479,11 +560,12 @@ function renderEditor() {
           <td style="white-space:nowrap">${r.phone}</td>
           <td style="text-align:center">${r.total_repairs}</td>
           <td style="white-space:nowrap">${money(r.grand_total)}</td>
+          <td><button data-reprint style="padding:6px 10px">Reprint</button></td>
           </tr>`);
 
+          // Click row -> open modal details
           tr.onclick = async () => {
             try {
-              console.log("token exists?", !!token, token?.slice?.(0, 20));
               histStatus.textContent = "Loading details...";
               const detail = await apiAuth(`/.netlify/functions/repairs_detail?id=${encodeURIComponent(r.id)}`, {
                 cache: "no-store"
@@ -493,6 +575,22 @@ function renderEditor() {
             } catch (e) {
               console.error(e);
               histStatus.textContent = "Detail load failed (check console)";
+            }
+          };
+
+          // Click reprint button -> print and stop row click
+          tr.querySelector('[data-reprint]').onclick = async (ev) => {
+            ev.stopPropagation();
+            try {
+              histStatus.textContent = "Preparing invoice...";
+              const detail = await apiAuth(`/.netlify/functions/repairs_detail?id=${encodeURIComponent(r.id)}`, {
+                cache: "no-store"
+              });
+              openReprintWindow(detail.repair, detail.items);
+              histStatus.textContent = "";
+            } catch (e) {
+              console.error(e);
+              histStatus.textContent = "Reprint Failed (check console)";
             }
           };
 
