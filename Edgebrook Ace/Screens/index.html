@@ -470,6 +470,7 @@
 
         (async () => {
           try {
+            comsole.log("REPAIR PAYLOAD SENDING: ", repair);
             const res = await fetch("/.netlify/functions/repairs_create", {
               method: "POST",
               headers: { "Content-Type": "application/json" },

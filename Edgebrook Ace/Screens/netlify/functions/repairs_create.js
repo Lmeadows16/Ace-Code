@@ -32,8 +32,8 @@ exports.handler = async (event) => {
             customer_name: repair.customer_name || null,
             phone: repair.phone || null,
             notes: repair.notes || "",
-            total_repairs: totalRepairs,      // <- if your DB is total_repairs
-            repair_total: repairTotal,        // <- if your DB is repair_total
+            total_repairs: totalRepairs,      
+            repair_total: repairTotal,        
             labor_total: repair.labor_total || 0,
             tax_total: repair.tax_total || 0,
             grand_total: repair.grand_total || 0
