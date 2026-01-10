@@ -5,7 +5,7 @@ exports.handler = async () => {
 
     const { data, error } = await supabase 
         .from("employees")
-        .select("employee_id,name1")
+        .select("employee_id,name")
         .order("employee_id");
 
     if (error)
