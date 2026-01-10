@@ -11,7 +11,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
-        "npm:@supabase/supabase-js@2"
+        "npm:@supabase/supabase-js@^2.89.0"
       ]
     }
   }

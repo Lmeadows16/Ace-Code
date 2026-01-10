@@ -3,6 +3,12 @@ const { createClient } = require("@supabase/supabase-js");
 
 exports.handler = async (event) => {
     try {
+
+        function num(v, fallback = 0) {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : fallback;
+        }
+
         if (event.httpMethod !== "POST") {
             return { statusCode: 405, body: "Method Not Allowed" };
         }
@@ -16,13 +22,12 @@ exports.handler = async (event) => {
         const repair = body.repair || {};
         const items = Array.isArray(body.items) ? body.items : [];
 
-        // Accept either name
-        const totalRepairs =
-            repair.total_repairs ?? repair.total_screens ?? 0;
+        const totalRepairs = num(repair.total_repairs, 0);
+        const repairTotal = num(repair.repair_total, 0);
 
-        // Accept either name for "repair total"
-        const repairTotal =
-            repair.repair_total ?? repair.screen_total ?? 0;
+        // Take out
+        console.log("repairs_create body: ", JSON.stringify(body));
+        console.log("Computed totals: ", totalRepairs, repairTotal);
 
         // Build DB row (match your DB column names here)
         const repairRow = {

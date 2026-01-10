@@ -421,12 +421,13 @@
         const repair = {
           employee_id: enteredId,
           employee_name: employeeName,
-          repair_date: date,                 // must be YYYY-MM-DD
+          repair_date: date,
           customer_name: name,
           phone: phone,
-          notes: notes || "",
+          notes: notes || "", 
+
           total_repairs: totalQtyNum,
-          repair_total: repairTotals.screen_total,
+          repair_total: repairTotals.repair_total,
           labor_total: repairTotals.labor_total,
           tax_total: repairTotals.tax_total,
           grand_total: repairTotals.grand_total
